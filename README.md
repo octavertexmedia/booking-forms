@@ -134,7 +134,7 @@ python manage.py send_workshop_reminders --force
 
 ## CMS notes
 
-Edit workshop copy, price, seat cap, WhatsApp templates, and the group invite under **Pages → Tiramisu Making Workshop**. Placeholders in the confirmation template: `{{name}}`, `{{group_invite_link}}`, `{{amount}}`, `{{date}}`, `{{time}}`, `{{venue}}`, `{{chef}}`.
+Each live **Event** page is its own booking form. Add or copy an event under **Pages → Cafe Orelo**. Edit date, price, seat cap, flyer copy, WhatsApp group invite, and the post-payment email on that page. Placeholders: `{{name}}`, `{{event}}`, `{{group_invite_link}}`, `{{invite_link}}`, `{{amount}}`, `{{date}}`, `{{time}}`, `{{venue}}`, `{{chef}}`, `{{reference}}`, `{{seats}}`. Export the sheet from **Registrations** (CSV) or Django admin.
 
 ## Defaults chosen where the spec was silent
 

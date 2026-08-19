@@ -28,8 +28,12 @@ if env("VERCEL"):  # noqa: F405
         ALLOWED_HOSTS.append(".vercel.app")  # noqa: F405
     if _vercel_host and _vercel_host not in ALLOWED_HOSTS:  # noqa: F405
         ALLOWED_HOSTS.append(_vercel_host)  # noqa: F405
-    if "https://*.vercel.app" not in CSRF_TRUSTED_ORIGINS:  # noqa: F405
-        CSRF_TRUSTED_ORIGINS.append("https://*.vercel.app")  # noqa: F405
+    for _origin in (
+        "https://*.vercel.app",
+        "https://booking-forms-ten.vercel.app",
+    ):
+        if _origin not in CSRF_TRUSTED_ORIGINS:  # noqa: F405
+            CSRF_TRUSTED_ORIGINS.append(_origin)  # noqa: F405
     if _vercel_host:
         _origin = f"https://{_vercel_host}"
         if _origin not in CSRF_TRUSTED_ORIGINS:  # noqa: F405

@@ -10,25 +10,27 @@ from .models import Registration
 class RegistrationAdmin(admin.ModelAdmin):
     list_display = (
         "created_at",
+        "workshop",
         "full_name",
-        "whatsapp",
-        "email",
         "seats",
-        "amount",
-        "payment_link",
-        "payment_id",
         "status",
+        "payment_id",
         "group_invite_label",
+        "email_invite_label",
         "reference_id",
     )
-    list_filter = ("status", "group_invite_sent", "workshop")
+    list_filter = ("workshop", "status", "group_invite_sent", "email_invite_sent")
     search_fields = ("full_name", "email", "whatsapp", "reference_id", "payment_id")
     readonly_fields = ("created_at", "reference_id", "payment_link_id", "raw_webhook")
     actions = ["export_sheet_csv"]
 
-    @admin.display(description="Group invite sent")
+    @admin.display(description="WhatsApp invite sent")
     def group_invite_label(self, obj: Registration) -> str:
         return obj.group_invite_label
+
+    @admin.display(description="Email invite sent")
+    def email_invite_label(self, obj: Registration) -> str:
+        return obj.email_invite_label
 
     @admin.action(description="Export sheet CSV")
     def export_sheet_csv(self, request, queryset):
@@ -38,6 +40,7 @@ class RegistrationAdmin(admin.ModelAdmin):
         writer.writerow(
             [
                 "Timestamp",
+                "Event",
                 "Name",
                 "WhatsApp",
                 "Email",
@@ -46,13 +49,15 @@ class RegistrationAdmin(admin.ModelAdmin):
                 "Payment Link",
                 "Payment ID",
                 "Status",
-                "Group Invite Sent",
+                "WhatsApp Invite Sent",
+                "Email Invite Sent",
             ]
         )
-        for row in queryset.order_by("created_at"):
+        for row in queryset.select_related("workshop").order_by("created_at"):
             writer.writerow(
                 [
                     row.created_at.strftime("%d %b %Y %H:%M"),
+                    row.workshop.title,
                     row.full_name,
                     row.whatsapp,
                     row.email,
@@ -62,6 +67,7 @@ class RegistrationAdmin(admin.ModelAdmin):
                     row.payment_id or "—",
                     row.status,
                     row.group_invite_label,
+                    row.email_invite_label,
                 ]
             )
         return response

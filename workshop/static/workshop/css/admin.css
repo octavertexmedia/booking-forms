@@ -21,6 +21,9 @@
   --w-color-primary-200: #3d7832;
   --w-color-secondary: #0b3f1f;
   --w-color-secondary-100: #14532d;
+  --w-color-text-label-menus-default: #f5f5dc;
+  --w-color-text-label-menus-active: #ffffff;
+  --w-color-icon-primary: #f5f5dc;
 
   --primary: #4b8e3d;
   --secondary: #0b3f1f;
@@ -58,39 +61,237 @@ div.breadcrumbs {
 }
 
 .button,
+.button-small,
+.w-btn,
+.w-btn-primary,
+.w-btn--primary,
+.w-btn-secondary,
+.w-btn--secondary,
 input[type="submit"],
 input[type="button"],
 .submit-row input,
-a.button {
+a.button,
+a.button-small,
+a.w-btn,
+.w-slim-header__actions .button,
+.w-slim-header__actions .w-btn,
+.w-header .button,
+.object-tools a {
   background: var(--ho-primary);
+  color: #ffffff;
   border-radius: 9999px;
 }
 
+.button:link,
+.button:visited,
+.button-small:link,
+.button-small:visited,
+.w-btn:link,
+.w-btn:visited,
+.w-btn-primary:link,
+.w-btn-primary:visited,
+.w-btn--primary:link,
+.w-btn--primary:visited,
+a.button:link,
+a.button:visited,
+a.button-small:link,
+a.button-small:visited,
+a.w-btn:link,
+a.w-btn:visited {
+  color: #ffffff;
+}
+
 .button:hover,
+.button-small:hover,
+.w-btn:hover,
+.w-btn-primary:hover,
+.w-btn--primary:hover,
 input[type="submit"]:hover,
 input[type="button"]:hover,
 .submit-row input:hover,
-a.button:hover {
+a.button:hover,
+a.w-btn:hover,
+.object-tools a:hover {
   background: var(--ho-primary-active);
+  color: #f5f5dc;
 }
 
 .button.default,
 input[type="submit"].default,
 .submit-row input.default {
   background: var(--ho-primary-dark);
+  color: #ffffff;
+}
+
+.button .icon,
+.button svg,
+.button-small .icon,
+.button-small svg,
+.w-btn .icon,
+.w-btn svg,
+.w-btn-primary svg,
+.w-btn--primary svg,
+a.button svg,
+.object-tools a svg {
+  color: #ffffff;
+  fill: currentColor;
+}
+
+.button:disabled,
+.button.disabled,
+.button[disabled],
+.button-small:disabled,
+.w-btn:disabled,
+.w-btn[disabled],
+input[type="submit"]:disabled,
+input[type="button"]:disabled {
+  background: var(--ho-primary);
+  color: #f5f5dc;
+  opacity: 0.72;
 }
 
 #changelist-filter li.selected a {
   color: var(--ho-primary-dark);
 }
 
-a:link,
-a:visited {
+/* Content links stay HealthyOme green. Do NOT let this paint:
+   1) the dark sidebar (green #4b8e3d on forest #0b3f1f hid menu labels)
+   2) CTA buttons (same green label on a green button — “Add an image”). */
+.content-wrapper a:link:not(.button):not(.button-small):not(.w-btn):not([class*="w-btn"]),
+.content-wrapper a:visited:not(.button):not(.button-small):not(.w-btn):not([class*="w-btn"]),
+.login-form a:link:not(.button):not(.button-small):not(.w-btn):not([class*="w-btn"]),
+.login-form a:visited:not(.button):not(.button-small):not(.w-btn):not([class*="w-btn"]),
+#content a:link:not(.button):not(.button-small):not(.w-btn):not([class*="w-btn"]),
+#content a:visited:not(.button):not(.button-small):not(.w-btn):not([class*="w-btn"]),
+#changelist a:link:not(.button):not(.button-small):not(.w-btn):not([class*="w-btn"]),
+#changelist a:visited:not(.button):not(.button-small):not(.w-btn):not([class*="w-btn"]) {
   color: var(--ho-primary);
 }
 
-a:hover {
+.content-wrapper a:hover:not(.button):not(.button-small):not(.w-btn):not([class*="w-btn"]),
+.login-form a:hover:not(.button):not(.button-small):not(.w-btn):not([class*="w-btn"]),
+#content a:hover:not(.button):not(.button-small):not(.w-btn):not([class*="w-btn"]),
+#changelist a:hover:not(.button):not(.button-small):not(.w-btn):not([class*="w-btn"]) {
   color: var(--ho-primary-active);
+}
+
+/* Header / listing CTAs are often a.button inside #content; beat #content a:link. */
+#content a.button:link,
+#content a.button:visited,
+#content a.button-small:link,
+#content a.button-small:visited,
+#content a.w-btn:link,
+#content a.w-btn:visited,
+#content a[class*="w-btn"]:link,
+#content a[class*="w-btn"]:visited,
+.content-wrapper a.button:link,
+.content-wrapper a.button:visited,
+.content-wrapper a.w-btn:link,
+.content-wrapper a.w-btn:visited,
+#changelist a.button:link,
+#changelist a.button:visited,
+.login-form a.button:link,
+.login-form a.button:visited,
+.w-slim-header a.button:link,
+.w-slim-header a.button:visited,
+.w-slim-header a.w-btn:link,
+.w-slim-header a.w-btn:visited,
+.w-slim-header__actions a:link,
+.w-slim-header__actions a:visited,
+.w-header a.button:link,
+.w-header a.button:visited {
+  color: #ffffff;
+}
+
+#content a.button:hover,
+#content a.w-btn:hover,
+.content-wrapper a.button:hover,
+.w-slim-header a.button:hover,
+.w-slim-header__actions a:hover {
+  color: #f5f5dc;
+}
+
+/* Wagtail sidebar + Django admin nav: cream/white by default on forest */
+#wagtail-sidebar,
+#wagtail-sidebar a,
+#wagtail-sidebar a:link,
+#wagtail-sidebar a:visited,
+.sidebar,
+.sidebar a,
+.sidebar a:link,
+.sidebar a:visited,
+.sidebar-menu-item,
+.sidebar-menu-item a,
+.sidebar-menu-item__link,
+.sidebar-main-menu a,
+.sidebar-sub-menu-item a,
+.sidebar-sub-menu-panel a,
+.sidebar-footer a,
+.sidebar-account,
+.sidebar-account__name,
+.w-sidebar,
+.w-sidebar a,
+.w-sidebar a:link,
+.w-sidebar a:visited,
+nav.nav-sidebar a,
+nav.nav-sidebar a:link,
+nav.nav-sidebar a:visited,
+#nav-sidebar a,
+#nav-sidebar a:link,
+#nav-sidebar a:visited,
+.nav-sidebar a,
+#user-tools a,
+#user-tools a:link,
+#user-tools a:visited {
+  color: #f5f5dc !important;
+}
+
+#wagtail-sidebar svg,
+#wagtail-sidebar .icon,
+.sidebar svg,
+.sidebar .icon,
+.w-sidebar svg,
+.w-sidebar .icon,
+.sidebar-menu-item__link svg,
+.sidebar-footer svg,
+nav.nav-sidebar svg,
+#nav-sidebar svg {
+  color: #f5f5dc !important;
+  fill: currentColor !important;
+}
+
+#wagtail-sidebar a:hover,
+#wagtail-sidebar a:focus-visible,
+.sidebar a:hover,
+.sidebar a:focus-visible,
+.sidebar-menu-item__link:hover,
+.sidebar-main-menu a:hover,
+.sidebar-sub-menu-panel a:hover,
+.sidebar-footer a:hover,
+.w-sidebar a:hover,
+nav.nav-sidebar a:hover,
+#nav-sidebar a:hover,
+#user-tools a:hover {
+  color: #ffffff !important;
+}
+
+.sidebar-menu-item--active > a,
+.sidebar-menu-item--active .sidebar-menu-item__link,
+.sidebar-menu-item--active svg,
+.sidebar a[aria-current="page"],
+.sidebar a[aria-current="true"] {
+  color: #ffd54f !important;
+}
+
+/* Hide Wagtail upgrade chrome completely */
+.w-upgrade-notification,
+.w-panel-upgrade,
+[class*="w-upgrade-notification"],
+[class*="upgrade-notification"],
+[data-controller~="w-upgrade"],
+a[href*="docs.wagtail.org"][href*="releases"],
+a[href*="github.com/wagtail/wagtail/releases"] {
+  display: none !important;
 }
 
 /* Wagtail login + dashboard credit (HealthyOme ho-about-credits / login footer) */
@@ -167,4 +368,99 @@ body.login .site-footer__credit {
   .site-footer__credit-link {
     transition: none;
   }
+}
+
+/* Hide Wagtail bird, wordmark, and default favicon leftovers */
+.login-logo .icon-wagtail,
+.login-logo svg.icon-wagtail,
+.wagtail-logo-container,
+.sidebar-wagtail-branding,
+.sidebar-wagtail-branding__icon,
+.sidebar-wagtail-logo,
+[class*="sidebar-wagtail-branding"],
+.w-sidebar .icon-wagtail,
+svg.icon-wagtail,
+.wagtail-logo,
+.wagtail-logo-face {
+  display: none !important;
+}
+
+.cafe-orelo-login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 auto 0.5rem;
+}
+
+.cafe-orelo-logo-plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff6dc;
+  border-radius: 18px;
+  padding: 0.55rem 0.85rem;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset;
+}
+
+.cafe-orelo-login-brand .cafe-orelo-logo-plate {
+  padding: 0.75rem 1.1rem;
+}
+
+.cafe-orelo-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 168px;
+  max-height: 72px;
+  object-fit: contain;
+}
+
+.cafe-orelo-login-brand .cafe-orelo-logo {
+  max-width: 220px;
+  max-height: 96px;
+}
+
+.django-admin-orelo-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.django-admin-orelo-brand .cafe-orelo-logo {
+  max-width: 132px;
+  max-height: 48px;
+}
+
+.django-admin-orelo-title {
+  color: #fff;
+  font-weight: 800;
+}
+
+.cafe-orelo-login-sub {
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #bfe4c7;
+}
+
+.sidebar-cafe-orelo-brand,
+.sidebar-custom-branding {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.25rem 0.35rem;
+  text-decoration: none;
+}
+
+.sidebar-cafe-orelo-brand .cafe-orelo-logo-plate {
+  padding: 0.35rem 0.5rem;
+  border-radius: 14px;
+}
+
+.sidebar-cafe-orelo-brand .cafe-orelo-logo {
+  max-width: 118px;
+  max-height: 42px;
 }

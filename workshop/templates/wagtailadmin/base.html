@@ -1,8 +1,13 @@
 {% extends "wagtailadmin/admin_base.html" %}
-{% load wagtailadmin_tags wagtailcore_tags i18n %}
+{% load wagtailadmin_tags wagtailcore_tags i18n static %}
+
+{% block branding_title %}Cafe Orelo{% endblock %}
+{% block branding_favicon %}
+    <link rel="icon" href="{% static 'workshop/images/cafe-orelo-favicon.png' %}" type="image/png">
+{% endblock %}
 
 {% block furniture %}
-    <template data-wagtail-sidebar-branding-logo>{% block branding_logo %}{% endblock %}</template>
+    <template data-wagtail-sidebar-branding-logo>{% block branding_logo %}<span class="sidebar-cafe-orelo-brand"><span class="cafe-orelo-logo-plate"><img class="cafe-orelo-logo" src="{% static 'workshop/images/cafe-orelo-logo.png' %}" alt="Cafe Orelo" width="118" height="51"></span></span>{% endblock %}</template>
     {% sidebar_props %}
     <aside id="wagtail-sidebar" class="sidebar-loading" data-wagtail-sidebar aria-label="{% trans 'Sidebar' %}"></aside>
     {% keyboard_shortcuts_dialog %}

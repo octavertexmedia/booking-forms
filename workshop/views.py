@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from .email import send_invite_email
 from .forms import RegistrationForm
 from .models import Registration, RegistrationStatus, WorkshopPage
 from .razorpay_client import (
@@ -27,6 +28,22 @@ def health(_request: HttpRequest) -> JsonResponse:
     return JsonResponse({"ok": True, "service": "cafe-orelo-workshop"})
 
 
+def _deliver_invites(registration: Registration) -> None:
+    """WhatsApp + email with this event's group invite. Failures must not fail payment."""
+    registration.refresh_from_db()
+    if not registration.group_invite_sent:
+        try:
+            send_confirmation(registration)
+        except Exception:
+            logger.exception("WhatsApp confirmation failed for %s", registration.reference_id)
+    registration.refresh_from_db()
+    if not registration.email_invite_sent:
+        try:
+            send_invite_email(registration)
+        except Exception:
+            logger.exception("Invite email failed for %s", registration.reference_id)
+
+
 def _mark_paid(registration: Registration, payment_id: str, raw: dict | None = None) -> None:
     already_paid = registration.status == RegistrationStatus.PAID
     registration.status = RegistrationStatus.PAID
@@ -35,9 +52,9 @@ def _mark_paid(registration: Registration, payment_id: str, raw: dict | None = N
     if raw is not None:
         registration.raw_webhook = raw
     registration.save(update_fields=["status", "payment_id", "raw_webhook"])
-    if already_paid and registration.group_invite_sent:
+    if already_paid and registration.group_invite_sent and registration.email_invite_sent:
         return
-    send_confirmation(registration)
+    _deliver_invites(registration)
 
 
 def register(request: HttpRequest, page: WorkshopPage):
@@ -55,14 +72,25 @@ def register(request: HttpRequest, page: WorkshopPage):
     for _attempt in range(3):
         try:
             with transaction.atomic():
+                locked = WorkshopPage.objects.select_for_update().get(pk=page.pk)
+                remaining = locked.seats_remaining()
+                if data["seats"] > remaining:
+                    if remaining <= 0:
+                        form.add_error(None, "This event is sold out.")
+                    else:
+                        form.add_error(
+                            "seats",
+                            f"Only {remaining} seat{'s' if remaining != 1 else ''} left for this event.",
+                        )
+                    return {"form": form}
                 registration = Registration.objects.create(
-                    workshop=page,
+                    workshop=locked,
                     full_name=data["full_name"],
                     whatsapp=data["whatsapp"],
                     email=data["email"],
                     seats=data["seats"],
                     amount=amount,
-                    reference_id=page.next_reference_id(),
+                    reference_id=locked.next_reference_id(),
                     status=RegistrationStatus.PAYMENT_PENDING,
                 )
             break
@@ -76,7 +104,7 @@ def register(request: HttpRequest, page: WorkshopPage):
     try:
         link = create_payment_link(
             amount_paise=registration.amount_paise,
-            description=page.payment_description,
+            description=page.payment_link_description(registration.reference_id),
             name=registration.full_name,
             email=registration.email,
             contact=f"+91{registration.whatsapp}",
@@ -85,6 +113,8 @@ def register(request: HttpRequest, page: WorkshopPage):
             notes={
                 "registration_id": str(registration.pk),
                 "workshop": page.slug,
+                "event": page.title,
+                "reference": registration.reference_id,
             },
         )
     except RazorpayError:

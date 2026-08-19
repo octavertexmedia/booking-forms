@@ -6,6 +6,7 @@ __pycache__/
 *.sqlite3-journal
 .env
 .env.local
+.env.vercel*
 .neon
 media/
 staticfiles/

@@ -139,6 +139,7 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 WAGTAIL_SITE_NAME = "Cafe Orelo Workshops"
+WAGTAIL_ENABLE_UPDATE_CHECK = False
 WAGTAILADMIN_BASE_URL = env("WAGTAILADMIN_BASE_URL", "http://127.0.0.1:8000")
 WAGTAILDOCS_EXTENSIONS = ["pdf", "docx"]
 WAGTAILIMAGES_FEATURE_DETECTION_ENABLED = False
@@ -158,6 +159,23 @@ RAZORPAY_MOCK = env_bool("RAZORPAY_MOCK", False)
 WHATSAPP_API_URL = env("WHATSAPP_API_URL")
 WHATSAPP_API_TOKEN = env("WHATSAPP_API_TOKEN")
 WHATSAPP_EXTRA_PAYLOAD = env("WHATSAPP_EXTRA_PAYLOAD", "{}")
+
+EMAIL_HOST = env("EMAIL_HOST")
+EMAIL_PORT = int(env("EMAIL_PORT", "587") or "587")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", False)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "Cafe Orelo <noreply@localhost>")
+_email_backend = env("EMAIL_BACKEND")
+if _email_backend:
+    EMAIL_BACKEND = _email_backend
+elif EMAIL_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+elif DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
 
 AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
 AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", "ap-south-1")

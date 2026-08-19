@@ -1,7 +1,7 @@
 <div class="flyer-copy">
   <p class="script-line">
     <span class="doodle doodle--spark" aria-hidden="true"></span>
-    Learn. Create. Indulge.
+    {{ workshop.tagline }}
     <span class="script-hearts" aria-hidden="true">
       {% include "workshop/partials/line_icon.html" with name="heart" %}
       {% include "workshop/partials/line_icon.html" with name="heart" %}
@@ -9,13 +9,13 @@
   </p>
 
   <h1 class="flyer-title">
-    <span class="flyer-title__hero">Tiramisu</span>
-    <span class="flyer-title__sub">Making Workshop</span>
+    <span class="flyer-title__hero">{{ workshop.hero_title }}</span>
+    <span class="flyer-title__sub">{{ workshop.hero_kicker }}</span>
   </h1>
 
   <p class="gold-banner">
     {% include "workshop/partials/line_icon.html" with name="star" %}
-    Eggless tiramisu making
+    {{ workshop.gold_banner }}
     {% include "workshop/partials/line_icon.html" with name="star" %}
   </p>
 
@@ -46,38 +46,16 @@
   </ul>
 
   <section class="take-box">
-    <p class="take-box__head">What you will take home?</p>
+    <p class="take-box__head">{{ workshop.take_home_intro }}</p>
     <ul class="take-home">
+      {% for item in workshop.take_home_display %}
       <li>
-        <span class="icon-orb icon-orb--pink">
-          {% include "workshop/partials/line_icon.html" with name="cake" %}
+        <span class="icon-orb icon-orb--{{ item.orb }}">
+          {% include "workshop/partials/line_icon.html" with name=item.icon %}
         </span>
-        <span>Your own handmade <strong class="accent-pink">eggless tiramisu</strong></span>
+        <span>{{ item.text }}</span>
       </li>
-      <li>
-        <span class="icon-orb icon-orb--blue">
-          {% include "workshop/partials/line_icon.html" with name="book" %}
-        </span>
-        <span>Detailed <strong class="accent-blue">recipe sheet</strong></span>
-      </li>
-      <li>
-        <span class="icon-orb icon-orb--orange">
-          {% include "workshop/partials/line_icon.html" with name="hat" %}
-        </span>
-        <span><strong class="accent-orange">Hands-on</strong> learning &amp; techniques</span>
-      </li>
-      <li>
-        <span class="icon-orb icon-orb--green">
-          {% include "workshop/partials/line_icon.html" with name="cup" %}
-        </span>
-        <span>Complimentary <strong class="accent-green">beverage</strong></span>
-      </li>
-      <li>
-        <span class="icon-orb icon-orb--purple">
-          {% include "workshop/partials/line_icon.html" with name="heart" %}
-        </span>
-        <span>A fun baking experience with fellow <strong class="accent-purple">dessert lovers</strong></span>
-      </li>
+      {% endfor %}
     </ul>
   </section>
 
@@ -91,20 +69,22 @@
       <span class="icon-orb icon-orb--gold">
         {% include "workshop/partials/line_icon.html" with name="ribbon" %}
       </span>
-      Limited seats. Book your spot now!
+      {% if workshop.is_sold_out %}Sold out{% else %}{{ workshop.limited_seats_line }}{% endif %}
     </p>
-    {% if cta == "book" %}
+    {% if cta == "book" and not workshop.is_sold_out %}
       <a class="btn btn-primary" href="{{ book_url }}">Book your spot now</a>
     {% endif %}
-    <a class="whatsapp-link" href="https://wa.me/917709818290">
+    {% if workshop.enquiry_whatsapp_url %}
+    <a class="whatsapp-link" href="{{ workshop.enquiry_whatsapp_url }}">
       <span class="whatsapp-orb">
         {% include "workshop/partials/line_icon.html" with name="whatsapp" %}
       </span>
-      7709818290
+      {{ workshop.enquiry_whatsapp_display }}
       <span class="script-hearts" aria-hidden="true">
         {% include "workshop/partials/line_icon.html" with name="heart" %}
         {% include "workshop/partials/line_icon.html" with name="heart" %}
       </span>
     </a>
+    {% endif %}
   </div>
 </div>

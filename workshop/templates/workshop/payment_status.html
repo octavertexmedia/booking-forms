@@ -15,6 +15,7 @@
         Payment of ₹{{ registration.amount|floatformat:0 }} is marked PAID.
         {% if workshop.group_invite_link %}
           Join the workshop WhatsApp group yourself — we do not add anyone automatically.
+          The same invite is emailed to {{ registration.email }}.
         {% else %}
           Your confirmation is on file. The group invite will be sent once the kitchen publishes the link.
         {% endif %}

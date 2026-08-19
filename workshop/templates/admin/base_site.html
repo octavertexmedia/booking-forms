@@ -5,11 +5,12 @@
 
 {% block extrahead %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static 'workshop/css/admin.css' %}">
+  <link rel="icon" href="{% static 'workshop/images/cafe-orelo-favicon.png' %}" type="image/png">
+  <link rel="stylesheet" href="{% static 'workshop/css/admin.css' %}?v=20260819-logo">
 {% endblock %}
 
 {% block branding %}
-<div id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></div>
+<div id="site-name"><a href="{% url 'admin:index' %}"><span class="django-admin-orelo-brand"><span class="cafe-orelo-logo-plate"><img class="cafe-orelo-logo" src="{% static 'workshop/images/cafe-orelo-logo.png' %}" alt="" width="132" height="57"></span><span class="django-admin-orelo-title">{{ site_header|default:_('Django administration') }}</span></span></a></div>
 {% if user.is_anonymous %}
   {% include "admin/color_theme_toggle.html" %}
 {% endif %}

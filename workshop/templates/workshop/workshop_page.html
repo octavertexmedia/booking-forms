@@ -7,62 +7,76 @@
 {% block content %}
 <section class="flyer-split flyer-split--register">
   {% include "workshop/partials/flyer_copy.html" with workshop=page cta="register" %}
-  <div class="flyer-visual flyer-visual--with-form">
+  <div class="flyer-visual flyer-visual--register">
     {% include "workshop/partials/flyer_portrait.html" with hero_image=page.hero_image chef_name=page.chef_display_name compact=True %}
-
-    <form class="ticket" method="post" novalidate id="registration-form">
-      {% csrf_token %}
-      <div class="ticket-head">
-        <p class="ticket-brand">Reserve your seat</p>
-        <p class="ticket-id">₹{{ page.price_per_seat|floatformat:0 }} / seat</p>
-      </div>
-      <div class="perforation" aria-hidden="true"></div>
-
-      {% if form.non_field_errors %}
-        <div class="form-alert" role="alert">
-          {{ form.non_field_errors }}
-        </div>
-      {% endif %}
-
-      <div class="field">
-        <label for="{{ form.full_name.id_for_label }}">{{ form.full_name.label }} *</label>
-        {{ form.full_name }}
-        {% if form.full_name.errors %}
-          <p class="field-error" role="alert">{{ form.full_name.errors.0 }}</p>
-        {% endif %}
-      </div>
-
-      <div class="field">
-        <label for="{{ form.whatsapp.id_for_label }}">{{ form.whatsapp.label }} *</label>
-        {{ form.whatsapp }}
-        {% if form.whatsapp.errors %}
-          <p class="field-error" role="alert">{{ form.whatsapp.errors.0 }}</p>
-        {% endif %}
-      </div>
-
-      <div class="field">
-        <label for="{{ form.email.id_for_label }}">{{ form.email.label }} *</label>
-        {{ form.email }}
-        {% if form.email.errors %}
-          <p class="field-error" role="alert">{{ form.email.errors.0 }}</p>
-        {% endif %}
-      </div>
-
-      <fieldset class="field seats">
-        <legend>{{ form.seats.label }} *</legend>
-        {{ form.seats }}
-        {% if form.seats.errors %}
-          <p class="field-error" role="alert">{{ form.seats.errors.0 }}</p>
-        {% endif %}
-      </fieldset>
-
-      <p class="ticket-note">{{ page.form_note }}</p>
-
-      <button class="btn btn-primary btn-full" type="submit" id="submit-btn">
-        Book your spot now
-      </button>
-    </form>
   </div>
+
+  {% if page.is_sold_out %}
+  <aside class="ticket ticket--soldout">
+    <div class="ticket-head">
+      <p class="ticket-brand">Sold out</p>
+      <p class="ticket-id">₹{{ page.price_per_seat|floatformat:0 }} / seat</p>
+    </div>
+    <div class="perforation" aria-hidden="true"></div>
+    <p class="ticket-note">Every paid seat for this event is taken. Ask on WhatsApp if a later date opens.</p>
+  </aside>
+  {% else %}
+  <form class="ticket" method="post" novalidate id="registration-form">
+    {% csrf_token %}
+    <div class="ticket-head">
+      <p class="ticket-brand">Reserve your seat</p>
+      <p class="ticket-id">₹{{ page.price_per_seat|floatformat:0 }} / seat</p>
+    </div>
+    <div class="perforation" aria-hidden="true"></div>
+
+    {% if form.non_field_errors %}
+      <div class="form-alert" role="alert">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <div class="field">
+      <label for="{{ form.full_name.id_for_label }}">{{ form.full_name.label }} *</label>
+      {{ form.full_name }}
+      {% if form.full_name.errors %}
+        <p class="field-error" role="alert">{{ form.full_name.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.whatsapp.id_for_label }}">{{ form.whatsapp.label }} *</label>
+      {{ form.whatsapp }}
+      {% if form.whatsapp.errors %}
+        <p class="field-error" role="alert">{{ form.whatsapp.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.email.id_for_label }}">{{ form.email.label }} *</label>
+      {{ form.email }}
+      {% if form.email.errors %}
+        <p class="field-error" role="alert">{{ form.email.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <fieldset class="field seats">
+      <legend>{{ form.seats.label }} *</legend>
+      {{ form.seats }}
+      {% if form.seats.errors %}
+        <p class="field-error" role="alert">{{ form.seats.errors.0 }}</p>
+      {% endif %}
+    </fieldset>
+
+    <p class="ticket-note">{{ page.form_note }}</p>
+    {% if page.seats_remaining < page.seat_capacity %}
+      <p class="ticket-note">{{ page.seats_remaining }} seat{{ page.seats_remaining|pluralize }} left.</p>
+    {% endif %}
+
+    <button class="btn btn-primary btn-full" type="submit" id="submit-btn">
+      Book your spot now
+    </button>
+  </form>
+  {% endif %}
 </section>
 {% endblock %}
 

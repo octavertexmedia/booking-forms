@@ -1,11 +1,15 @@
 {% extends "wagtailadmin/admin_base.html" %}
-{% load i18n wagtailadmin_tags %}
+{% load i18n wagtailadmin_tags static %}
 {% block titletag %}{% trans "Sign in" %}{% endblock %}
+{% block branding_title %}Cafe Orelo{% endblock %}
+{% block branding_favicon %}
+    <link rel="icon" href="{% static 'workshop/images/cafe-orelo-favicon.png' %}" type="image/png">
+{% endblock %}
 {% block bodyclass %}login{% endblock %}
 
 {% block furniture %}
     <main class="content-wrapper" id="main">
-        <h1>{% block branding_login %}{% trans "Sign in to Wagtail" %}{% endblock %}</h1>
+        <h1>{% block branding_login %}Sign in to Cafe Orelo{% endblock %}</h1>
 
         <div class="messages" role="status">
             {# Always show messages div so it can be appended to by JS #}
@@ -70,8 +74,11 @@
         {% endblock %}
 
         {% block branding_logo %}
-            <div class="login-logo">
-                {% include "wagtailadmin/logo.html" with wordmark="True" %}
+            <div class="login-logo cafe-orelo-login-brand">
+                <span class="cafe-orelo-logo-plate">
+                    <img class="cafe-orelo-logo" src="{% static 'workshop/images/cafe-orelo-logo.png' %}" alt="Cafe Orelo" width="220" height="95">
+                </span>
+                <span class="cafe-orelo-login-sub">Booking Forms</span>
             </div>
         {% endblock %}
     </main>

@@ -47,8 +47,11 @@ class RegistrationForm(forms.Form):
     def __init__(self, workshop: WorkshopPage, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.workshop = workshop
+        remaining = workshop.seats_remaining()
         self.fields["seats"].choices = [
-            (seats, label) for seats, _amount, label in workshop.seat_choices()
+            (seats, label)
+            for seats, _amount, label in workshop.seat_choices()
+            if seats <= remaining
         ]
         for name, field in self.fields.items():
             css = "field-input"
@@ -73,6 +76,13 @@ class RegistrationForm(forms.Form):
 
     def clean_seats(self) -> int:
         seats = self.cleaned_data["seats"]
+        remaining = self.workshop.seats_remaining()
+        if remaining <= 0:
+            raise forms.ValidationError("This event is sold out.")
         if seats < 1 or seats > self.workshop.max_seats_per_booking:
             raise forms.ValidationError("Choose an available seat option.")
+        if seats > remaining:
+            raise forms.ValidationError(
+                f"Only {remaining} seat{'s' if remaining != 1 else ''} left for this event."
+            )
         return seats

@@ -9,26 +9,10 @@ from typing import Any
 import requests
 from django.conf import settings
 
-from .models import Registration, WorkshopPage
+from .messaging import render_template
+from .models import Registration
 
 logger = logging.getLogger(__name__)
-
-
-def render_template(template: str, workshop: WorkshopPage, registration: Registration) -> str:
-    time_range = workshop.format_time_range()
-    replacements = {
-        "{{name}}": registration.full_name,
-        "{{group_invite_link}}": workshop.group_invite_link or "(invite link not set yet)",
-        "{{amount}}": f"{registration.amount:,.0f}",
-        "{{date}}": workshop.workshop_date.strftime("%-d %B %Y"),
-        "{{time}}": time_range,
-        "{{venue}}": workshop.venue,
-        "{{chef}}": workshop.chef_name,
-    }
-    message = template
-    for key, value in replacements.items():
-        message = message.replace(key, value)
-    return message
 
 
 def send_whatsapp(to: str, message: str, extra: dict[str, Any] | None = None) -> bool:

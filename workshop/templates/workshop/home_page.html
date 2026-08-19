@@ -1,10 +1,42 @@
 {% extends "workshop/base.html" %}
 {% load wagtailcore_tags %}
 
-{% block title %}Cafe Orelo · Eggless Tiramisu Making Workshop{% endblock %}
+{% block title %}
+  {% if show_event_cards %}Cafe Orelo · Workshops & bookings{% else %}Cafe Orelo · {{ workshop.workshop_subtitle|default:"Eggless Tiramisu Making Workshop" }}{% endif %}
+{% endblock %}
 
 {% block content %}
-{% if workshop %}
+{% if show_event_cards %}
+<section class="event-index">
+  <p class="script-line">Learn. Create. Indulge.</p>
+  <h1 class="flyer-title">
+    <span class="flyer-title__hero">Bookings</span>
+    <span class="flyer-title__sub">Cafe Orelo workshops</span>
+  </h1>
+  {% if page.intro %}
+    <div class="lede">{{ page.intro|richtext }}</div>
+  {% endif %}
+  <div class="event-grid">
+    {% for event in events %}
+      {% pageurl event as event_url %}
+      <article class="event-card{% if event.is_sold_out %} event-card--soldout{% endif %}">
+        <p class="event-card__date">{{ event.format_flyer_date }}</p>
+        <h2 class="event-card__title">{{ event.hero_title }}</h2>
+        <p class="event-card__kicker">{{ event.hero_kicker }}</p>
+        <p class="event-card__sub">{{ event.workshop_subtitle }}</p>
+        <p class="event-card__meta">{{ event.format_flyer_time }} · {{ event.venue }}</p>
+        <p class="event-card__price">₹{{ event.price_per_seat|floatformat:0 }}/-</p>
+        {% if event.is_sold_out %}
+          <span class="event-card__badge">Sold out</span>
+          <a class="btn btn-primary" href="{{ event_url }}">View details</a>
+        {% else %}
+          <a class="btn btn-primary" href="{{ event_url }}">Book your spot</a>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% elif workshop %}
 <section class="flyer-split">
   {% pageurl workshop as workshop_url %}
   {% include "workshop/partials/flyer_copy.html" with workshop=workshop cta="book" book_url=workshop_url %}
@@ -17,8 +49,8 @@
   <article class="status-card">
     <p class="script-line">Learn. Create. Indulge.</p>
     <h1 class="flyer-title">
-      <span class="flyer-title__hero">Tiramisu</span>
-      <span class="flyer-title__sub">Making Workshop</span>
+      <span class="flyer-title__hero">Workshops</span>
+      <span class="flyer-title__sub">Coming soon</span>
     </h1>
     <p class="lede">No workshop is published yet. Check back shortly.</p>
   </article>
