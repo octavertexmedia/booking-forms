@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ page.title }} · Cafe Orelo{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Eggless Tiramisu Making Workshop at Cafe Orelo with pastry chef Aanchal Wadhwa. Sunday 23 August 2026, 3:00 PM to 5:00 PM. ₹1499.{% endblock %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Oswald:wght@500;600;700&family=Outfit:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'workshop/css/workshop.css' %}">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="atelier">
+    <header class="site-header">
+      <a class="wordmark" href="/">Cafe Orelo</a>
+      <p class="brand-tagline"><span></span>good food, good mood.<span></span></p>
+    </header>
+    <main id="main">
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+      <p>Cafe Orelo · seats confirmed only after payment</p>
+      {% include "workshop/partials/octavertex_credit.html" %}
+    </footer>
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

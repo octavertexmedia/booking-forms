@@ -1,0 +1,27 @@
+{% extends "workshop/base.html" %}
+{% load wagtailcore_tags %}
+
+{% block title %}Cafe Orelo · Eggless Tiramisu Making Workshop{% endblock %}
+
+{% block content %}
+{% if workshop %}
+<section class="flyer-split">
+  {% pageurl workshop as workshop_url %}
+  {% include "workshop/partials/flyer_copy.html" with workshop=workshop cta="book" book_url=workshop_url %}
+  <aside class="flyer-visual">
+    {% include "workshop/partials/flyer_portrait.html" with hero_image=workshop.hero_image chef_name=workshop.chef_display_name %}
+  </aside>
+</section>
+{% else %}
+<section class="status-stage">
+  <article class="status-card">
+    <p class="script-line">Learn. Create. Indulge.</p>
+    <h1 class="flyer-title">
+      <span class="flyer-title__hero">Tiramisu</span>
+      <span class="flyer-title__sub">Making Workshop</span>
+    </h1>
+    <p class="lede">No workshop is published yet. Check back shortly.</p>
+  </article>
+</section>
+{% endif %}
+{% endblock %}

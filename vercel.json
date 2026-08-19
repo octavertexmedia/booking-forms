@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "django",
+  "functions": {
+    "portal/asgi.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{.venv/**,venv/**,.git/**,media/**,staticfiles/**,.aws-sam/**,node_modules/**}"
+    },
+    "portal/wsgi.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{.venv/**,venv/**,.git/**,media/**,staticfiles/**,.aws-sam/**,node_modules/**}"
+    }
+  }
+}

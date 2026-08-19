@@ -1,0 +1,110 @@
+<div class="flyer-copy">
+  <p class="script-line">
+    <span class="doodle doodle--spark" aria-hidden="true"></span>
+    Learn. Create. Indulge.
+    <span class="script-hearts" aria-hidden="true">
+      {% include "workshop/partials/line_icon.html" with name="heart" %}
+      {% include "workshop/partials/line_icon.html" with name="heart" %}
+    </span>
+  </p>
+
+  <h1 class="flyer-title">
+    <span class="flyer-title__hero">Tiramisu</span>
+    <span class="flyer-title__sub">Making Workshop</span>
+  </h1>
+
+  <p class="gold-banner">
+    {% include "workshop/partials/line_icon.html" with name="star" %}
+    Eggless tiramisu making
+    {% include "workshop/partials/line_icon.html" with name="star" %}
+  </p>
+
+  <ul class="fact-row">
+    <li>
+      {% include "workshop/partials/line_icon.html" with name="calendar" %}
+      <div>
+        <span class="fact-label">Date</span>
+        <strong>{{ workshop.format_flyer_date }}</strong>
+      </div>
+    </li>
+    <li>
+      {% include "workshop/partials/line_icon.html" with name="clock" %}
+      <div>
+        <span class="fact-label">Time</span>
+        <strong>{{ workshop.format_flyer_time }}</strong>
+      </div>
+    </li>
+    <li class="fact-row__place">
+      <span class="fact-icon fact-icon--pin">
+        {% include "workshop/partials/line_icon.html" with name="pin" %}
+      </span>
+      <div>
+        <span class="fact-label">Location</span>
+        <strong>{{ workshop.venue }}</strong>
+      </div>
+    </li>
+  </ul>
+
+  <section class="take-box">
+    <p class="take-box__head">What you will take home?</p>
+    <ul class="take-home">
+      <li>
+        <span class="icon-orb icon-orb--pink">
+          {% include "workshop/partials/line_icon.html" with name="cake" %}
+        </span>
+        <span>Your own handmade <strong class="accent-pink">eggless tiramisu</strong></span>
+      </li>
+      <li>
+        <span class="icon-orb icon-orb--blue">
+          {% include "workshop/partials/line_icon.html" with name="book" %}
+        </span>
+        <span>Detailed <strong class="accent-blue">recipe sheet</strong></span>
+      </li>
+      <li>
+        <span class="icon-orb icon-orb--orange">
+          {% include "workshop/partials/line_icon.html" with name="hat" %}
+        </span>
+        <span><strong class="accent-orange">Hands-on</strong> learning &amp; techniques</span>
+      </li>
+      <li>
+        <span class="icon-orb icon-orb--green">
+          {% include "workshop/partials/line_icon.html" with name="cup" %}
+        </span>
+        <span>Complimentary <strong class="accent-green">beverage</strong></span>
+      </li>
+      <li>
+        <span class="icon-orb icon-orb--purple">
+          {% include "workshop/partials/line_icon.html" with name="heart" %}
+        </span>
+        <span>A fun baking experience with fellow <strong class="accent-purple">dessert lovers</strong></span>
+      </li>
+    </ul>
+  </section>
+
+  <p class="price-bar">
+    <span>Registration charges</span>
+    <strong>₹{{ workshop.price_per_seat|floatformat:0 }}/-</strong>
+  </p>
+
+  <div class="flyer-cta">
+    <p class="limited-line">
+      <span class="icon-orb icon-orb--gold">
+        {% include "workshop/partials/line_icon.html" with name="ribbon" %}
+      </span>
+      Limited seats. Book your spot now!
+    </p>
+    {% if cta == "book" %}
+      <a class="btn btn-primary" href="{{ book_url }}">Book your spot now</a>
+    {% endif %}
+    <a class="whatsapp-link" href="https://wa.me/917709818290">
+      <span class="whatsapp-orb">
+        {% include "workshop/partials/line_icon.html" with name="whatsapp" %}
+      </span>
+      7709818290
+      <span class="script-hearts" aria-hidden="true">
+        {% include "workshop/partials/line_icon.html" with name="heart" %}
+        {% include "workshop/partials/line_icon.html" with name="heart" %}
+      </span>
+    </a>
+  </div>
+</div>

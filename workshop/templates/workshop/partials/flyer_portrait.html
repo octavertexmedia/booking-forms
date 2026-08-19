@@ -1,0 +1,25 @@
+{% load static wagtailimages_tags %}
+<figure class="flyer-portrait{% if compact %} flyer-portrait--compact{% endif %}">
+  {% if hero_image %}
+    {% image hero_image fill-900x1400 as hero %}
+    <img
+      src="{{ hero.url }}"
+      alt="{{ hero_image.title|default:'Pastry chef Aanchal Wadhwa with handmade eggless tiramisu' }}"
+      width="{{ hero.width }}"
+      height="{{ hero.height }}"
+    >
+    <figcaption class="chef-chip">
+      <span class="chef-chip__by">By</span>
+      <span class="chef-chip__name">{{ chef_name }}</span>
+      <span class="chef-chip__role">Pastry Chef</span>
+    </figcaption>
+  {% else %}
+    <img
+      src="{% static 'workshop/images/chef-aanchal-tiramisu.png' %}"
+      alt="Pastry chef {{ chef_name }} holding a dish of handmade eggless tiramisu"
+      width="421"
+      height="894"
+    >
+    <figcaption class="visually-hidden">{{ chef_name }}, Pastry Chef</figcaption>
+  {% endif %}
+</figure>

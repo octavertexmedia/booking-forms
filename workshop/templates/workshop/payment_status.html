@@ -1,0 +1,65 @@
+{% extends "workshop/base.html" %}
+
+{% block title %}
+  {% if registration.status == "PAID" %}Registration confirmed{% else %}Payment pending{% endif %}
+  · Cafe Orelo
+{% endblock %}
+
+{% block content %}
+<section class="status-stage">
+  <article class="status-card">
+    {% if registration.status == "PAID" %}
+      <p class="script-line">You’re in.</p>
+      <h1 class="flyer-title flyer-title--status">You’re on the guest list, {{ registration.full_name }}.</h1>
+      <p class="lede">
+        Payment of ₹{{ registration.amount|floatformat:0 }} is marked PAID.
+        {% if workshop.group_invite_link %}
+          Join the workshop WhatsApp group yourself — we do not add anyone automatically.
+        {% else %}
+          Your confirmation is on file. The group invite will be sent once the kitchen publishes the link.
+        {% endif %}
+      </p>
+      {% if workshop.group_invite_link %}
+        <a class="btn btn-primary" href="{{ workshop.group_invite_link }}">Open WhatsApp group invite</a>
+      {% endif %}
+    {% else %}
+      <p class="eyebrow">Awaiting payment</p>
+      <h1 class="flyer-title flyer-title--status">Your seat is held only after payment.</h1>
+      <p class="lede">
+        Reference <span class="mono">{{ registration.reference_id }}</span>.
+        If you already paid, this page will update once Razorpay confirms.
+      </p>
+      {% if registration.payment_link %}
+        <a class="btn btn-primary" href="{{ registration.payment_link }}">Open payment link</a>
+      {% endif %}
+    {% endif %}
+
+    <ul class="fact-row fact-row--status">
+      <li>
+        <div>
+          <span class="fact-label">Workshop</span>
+          <strong>{{ workshop.workshop_subtitle }}</strong>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="fact-label">When</span>
+          <strong>{{ workshop.format_flyer_date }} · {{ workshop.format_flyer_time }}</strong>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="fact-label">Seats</span>
+          <strong>{{ registration.seats }}</strong>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="fact-label">Status</span>
+          <strong>{{ registration.status }}</strong>
+        </div>
+      </li>
+    </ul>
+  </article>
+</section>
+{% endblock %}

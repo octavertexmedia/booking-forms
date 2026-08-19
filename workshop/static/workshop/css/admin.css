@@ -1,0 +1,170 @@
+/* HealthyOme tokens + Octavertex credit — Wagtail / Django admin chrome */
+
+:root {
+  --ho-primary: #4b8e3d;
+  --ho-primary-active: #3d7832;
+  --ho-primary-dark: #2d5a26;
+  --ho-surface: #f6f7f8;
+  --ho-tint: #e8f5e9;
+  --ho-tint-card: #f3faf4;
+  --ho-border: #bfe4c7;
+  --ho-hero: #0b3f1f;
+  --ho-hero-mid: #14532d;
+  --ho-text: #111827;
+  --ho-text-muted: #6b7280;
+  --ho-divider: #e5e7eb;
+  --ho-radius: 14px;
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --w-color-primary: #4b8e3d;
+  --w-color-primary-200: #3d7832;
+  --w-color-secondary: #0b3f1f;
+  --w-color-secondary-100: #14532d;
+
+  --primary: #4b8e3d;
+  --secondary: #0b3f1f;
+  --accent: #e8f5e9;
+  --header-color: #ffffff;
+  --header-bg: #0b3f1f;
+  --header-link-color: #ffffff;
+  --link-fg: #4b8e3d;
+  --link-hover-color: #3d7832;
+  --link-selected-fg: #2d5a26;
+  --breadcrumbs-bg: #14532d;
+  --breadcrumbs-fg: #f3faf4;
+}
+
+#header {
+  background: var(--ho-hero);
+  color: #fff;
+}
+
+#header a:link,
+#header a:visited {
+  color: #fff;
+}
+
+#branding h1,
+#branding h1 a:link,
+#branding h1 a:visited {
+  color: #fff;
+  font-weight: 800;
+}
+
+div.breadcrumbs {
+  background: var(--ho-hero-mid);
+  color: #f3faf4;
+}
+
+.button,
+input[type="submit"],
+input[type="button"],
+.submit-row input,
+a.button {
+  background: var(--ho-primary);
+  border-radius: 9999px;
+}
+
+.button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+.submit-row input:hover,
+a.button:hover {
+  background: var(--ho-primary-active);
+}
+
+.button.default,
+input[type="submit"].default,
+.submit-row input.default {
+  background: var(--ho-primary-dark);
+}
+
+#changelist-filter li.selected a {
+  color: var(--ho-primary-dark);
+}
+
+a:link,
+a:visited {
+  color: var(--ho-primary);
+}
+
+a:hover {
+  color: var(--ho-primary-active);
+}
+
+/* Wagtail login + dashboard credit (HealthyOme ho-about-credits / login footer) */
+.site-footer__credit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem 1rem;
+  margin: 1.25rem 1rem 1.5rem;
+  padding: 0.85rem 1.15rem;
+  border: 1px solid var(--ho-divider);
+  border-radius: var(--ho-radius);
+  background: var(--background);
+  box-shadow: 0 8px 22px rgba(2, 6, 23, 0.06);
+}
+
+.login .site-footer__credit,
+body.login .site-footer__credit {
+  margin-top: 1.75rem;
+  background: var(--ho-tint-card);
+  border-color: var(--ho-border);
+}
+
+.site-footer__credit-text {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ho-text-muted);
+}
+
+.site-footer__credit-link {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.site-footer__credit-link:hover {
+  transform: translateY(-2px);
+  opacity: 0.92;
+}
+
+.site-footer__credit-link:focus-visible {
+  outline: 2px solid rgba(75, 142, 61, 0.65);
+  outline-offset: 3px;
+}
+
+.site-footer__credit-logo {
+  display: block;
+  height: 28px;
+  width: auto;
+  max-width: min(200px, 100%);
+  object-fit: contain;
+  filter:
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 2px 6px rgba(0, 0, 0, 0.22));
+}
+
+#footer .site-footer__credit {
+  margin: 0.75rem auto 1rem;
+  max-width: 42rem;
+}
+
+.w-sidebar .site-footer__credit,
+.sidebar .site-footer__credit {
+  margin: 0.75rem 0.6rem 1rem;
+  padding: 0.65rem 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-footer__credit-link {
+    transition: none;
+  }
+}

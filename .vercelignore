@@ -1,0 +1,16 @@
+.venv
+venv
+.git
+media
+staticfiles
+.aws-sam
+.neon
+*.sqlite3
+__pycache__
+.DS_Store
+.env
+.env.local
+.pytest_cache
+.mypy_cache
+.ruff_cache
+node_modules

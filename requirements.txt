@@ -1,0 +1,11 @@
+Django>=5.1,<5.3
+wagtail>=6.4,<6.5
+dj-database-url>=2.3,<3
+psycopg[binary]>=3.2,<4
+django-storages[s3]>=1.14,<2
+boto3>=1.35,<2
+whitenoise>=6.8,<7
+mangum>=0.19,<1
+gunicorn>=23,<24
+requests>=2.32,<3
+python-dotenv>=1.0,<2

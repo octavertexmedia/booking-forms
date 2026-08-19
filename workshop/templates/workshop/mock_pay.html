@@ -1,0 +1,20 @@
+{% extends "workshop/base.html" %}
+
+{% block title %}Dev payment · Cafe Orelo{% endblock %}
+
+{% block content %}
+<section class="status-stage">
+  <article class="status-card">
+    <p class="eyebrow">Local Razorpay mock</p>
+    <h1 class="flyer-title flyer-title--status">Confirm ₹{{ registration.amount|floatformat:0 }} for {{ registration.full_name }}</h1>
+    <p class="lede">
+      Live Payment Links are off (<span class="mono">RAZORPAY_MOCK=true</span>).
+      This step stands in for a successful <span class="mono">payment_link.paid</span> webhook.
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-primary" type="submit">Mark as paid</button>
+    </form>
+  </article>
+</section>
+{% endblock %}

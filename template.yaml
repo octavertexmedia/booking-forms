@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Cafe Orelo workshop portal — serverless Wagtail on Lambda + HTTP API
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 1024
+
+Resources:
+  PortalFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          DJANGO_SETTINGS_MODULE: portal.settings.serverless
+          DJANGO_DEBUG: "false"
+      Events:
+        Root:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: ANY
+        Proxy:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: portal
+
+  ReminderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      ImageConfig:
+        Command:
+          - workshop.lambda_reminder.handler
+      Timeout: 60
+      MemorySize: 512
+      Environment:
+        Variables:
+          DJANGO_SETTINGS_MODULE: portal.settings.serverless
+          DJANGO_DEBUG: "false"
+      Events:
+        SaturdayEveningIst:
+          Type: Schedule
+          Properties:
+            Description: Saturday 18:00 Asia/Kolkata (12:30 UTC)
+            Schedule: cron(30 12 ? * SAT *)
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: portal
+
+Outputs:
+  ApiUrl:
+    Description: HTTP API endpoint for the workshop portal
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"

@@ -1,0 +1,162 @@
+Yes. We can build this as a fully automated registration → payment → WhatsApp onboarding system for the Tiramisu Workshop.
+
+Recommended flow
+
+Meta Ad → Google Form → Razorpay Payment → Payment Verification → WhatsApp Group Invite
+
+Customer clicks your Meta ad.
+They fill a Google Form:
+Name
+WhatsApp number
+Email
+Number of seats
+Google Apps Script receives the submission.
+Script creates a unique Razorpay Payment Link for ₹1,499.
+Customer receives the payment link.
+Razorpay sends a payment_link.paid webhook after successful payment. Razorpay specifically supports this webhook event and includes the payment-link/customer details.
+Apps Script verifies the payment and changes the registration status to PAID.
+
+Customer automatically receives:
+
+🎉 Your Tiramisu Workshop registration is confirmed!
+
+Join the WhatsApp group here: [GROUP INVITE LINK]
+
+You also get a Google Sheet containing:
+Name | Phone | Email | Payment Link | Payment ID | Amount | Status | Group Sent
+Important: WhatsApp group
+
+There is one limitation: we should not try to programmatically force-add the customer to a WhatsApp group. The safer setup is to automatically send them the WhatsApp group invite link after payment. They click it and join themselves.
+
+This is actually better operationally because you don't have to manually add every participant.
+
+I recommend Razorpay
+
+For this workshop, use Razorpay Payment Links rather than a generic payment URL.
+
+Razorpay supports creating Payment Links through its API, and each Payment Link can be tracked against the customer/payment.
+
+Also, Razorpay says a Payment Link is intended for a single customer, so our Apps Script should generate a new ₹1,499 payment link for every registration rather than putting one common payment link in the form.
+
+Google Sheet structure
+
+I'll make the backend sheet like this:
+
+Timestamp	Name	WhatsApp	Email	Seats	Amount	Payment Link	Payment ID	Status	Group Invite Sent
+19 Aug	Rahul	770xxxxxxx	rahul@email.com	1	₹1499	rzp.io/...	—	PAYMENT_PENDING	NO
+19 Aug	Priya	98xxxxxxx	priya@email.com	1	₹1499	rzp.io/...	pay_xxx	PAID	YES
+
+This also gives you a clean participant database.
+
+Google Form
+
+I'd keep it very simple:
+
+🍰 Tiramisu Making Workshop
+
+Sunday, 23 August 2026
+3:00 PM – 5:00 PM
+Cafe Orelo
+
+Fields
+
+1. Full Name*
+Short answer
+
+2. WhatsApp Number*
+Short answer
+
+3. Email Address*
+Short answer
+
+4. Number of Seats*
+
+1 Seat — ₹1,499
+2 Seats — ₹2,998
+3 Seats — ₹4,497
+
+Then:
+
+After submitting this form, you will receive your secure payment link. Your seat will be confirmed only after successful payment.
+
+Payment automation
+
+The Apps Script will use Razorpay's API to create the payment link.
+
+For example:
+
+Amount: ₹1499
+Description: Cafe Orelo - Tiramisu Making Workshop
+Customer: Aanchal
+Phone: 7709818290
+Reference ID: TIRAMISU-20260823-001
+
+Then Razorpay generates:
+
+https://rzp.io/xxxxx
+
+The customer gets that link automatically.
+
+Once Razorpay reports:
+
+payment_link.paid
+
+the script updates the registration to PAID. Razorpay documents this exact webhook event for Payment Links.
+
+WhatsApp confirmation
+
+Since you're already working with VertexCRM/WhatsApp automation, I would connect the paid-registration event to your WhatsApp system rather than relying on email.
+
+Message:
+
+🎉 Registration Confirmed!
+
+Hi {{name}} 👋
+
+Your registration for the Eggless Tiramisu Making Workshop at Cafe Orelo is confirmed! 🍰
+
+📅 23rd August 2026
+⏰ 3:00 PM – 5:00 PM
+📍 Cafe Orelo
+👩‍🍳 Chef Aanchal Wadhwa
+
+💳 Payment: ₹1,499 — PAID
+
+👥 Join the workshop WhatsApp group:
+{{group_invite_link}}
+
+We’ll share all workshop updates and important details in the group.
+
+See you at Cafe Orelo! 🤎
+
+One more automation I'd add
+
+After payment, send a second reminder automatically on Saturday evening:
+
+🍰 Your Tiramisu Workshop is tomorrow!
+
+We're excited to see you at Cafe Orelo tomorrow from 3–5 PM.
+
+Please arrive 10 minutes early.
+
+See you tomorrow! 🤎
+
+That will reduce no-shows.
+
+What I need from you
+
+I can build the Google Apps Script code + Google Form structure + Razorpay webhook code + Google Sheet backend for you.
+
+You do not need to send me your Razorpay secret/API secret. We'll put those into Apps Script's Script Properties securely.
+
+I need these 3 things:
+
+Razorpay — confirm you're using Razorpay.
+WhatsApp — do you want to send through your existing VertexCRM/AI Sensy setup?
+WhatsApp group invite link — create the group and give me the invite link; we can keep it in the script configuration.
+
+Then I'll give you the exact copy-paste Apps Script, including the doPost() Razorpay webhook, form-submit trigger, payment-link creation, payment verification, Google Sheet updates, and WhatsApp confirmation.
+
+Google Apps Script supports installable form-submit triggers, so the form submission can automatically start this workflow.
+
+Razorpay Payment Links documentation
