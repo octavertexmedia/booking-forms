@@ -1,4 +1,5 @@
 # Cafe Orelo workshop portal
+ok
 
 Wagtail CMS registration portal for the Eggless Tiramisu Making Workshop. Guests register on the site, receive a unique Razorpay Payment Link, and get a WhatsApp confirmation (with the group invite) only after `payment_link.paid`.
 
