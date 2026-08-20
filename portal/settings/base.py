@@ -122,6 +122,9 @@ LANGUAGE_CODE = "en-in"
 TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True
 USE_TZ = True
+WAGTAIL_DATETIME_FORMAT = "%d %b %Y, %I:%M %p"
+WAGTAIL_DATE_FORMAT = "%d %b %Y"
+WAGTAIL_TIME_FORMAT = "%I:%M %p"
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

@@ -42,15 +42,16 @@ class RegistrationViewSet(SnippetViewSet):
     icon = "user"
     menu_order = 150
     list_display = (
+        "registered_at_ist",
         "workshop",
         "full_name",
         "package_name",
         "seats",
-        "status",
+        "status_label",
         "payment_id",
-        "email_invite_sent",
-        "group_invite_sent",
-        "reminder_sent",
+        "email_invite_label",
+        "group_invite_label",
+        "reminder_label",
         "reference_id",
     )
     list_filter = (
@@ -62,7 +63,7 @@ class RegistrationViewSet(SnippetViewSet):
     )
     search_fields = ("full_name", "email", "whatsapp", "reference_id", "payment_id", "package_name")
     list_export = (
-        "created_at",
+        "registered_at_ist",
         "workshop",
         "full_name",
         "whatsapp",
@@ -72,10 +73,10 @@ class RegistrationViewSet(SnippetViewSet):
         "amount",
         "payment_link",
         "payment_id",
-        "status",
-        "group_invite_sent",
-        "email_invite_sent",
-        "reminder_sent",
+        "status_label",
+        "group_invite_label",
+        "email_invite_label",
+        "reminder_label",
         "reference_id",
     )
     export_filename = "cafe-orelo-registrations"

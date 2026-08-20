@@ -10,12 +10,12 @@ from .payments import confirm_paid
 @admin.register(Registration)
 class RegistrationAdmin(admin.ModelAdmin):
     list_display = (
-        "created_at",
+        "registered_at_ist",
         "workshop",
         "full_name",
         "package_name",
         "seats",
-        "status",
+        "status_label",
         "payment_id",
         "email_invite_label",
         "group_invite_label",
@@ -50,17 +50,25 @@ class RegistrationAdmin(admin.ModelAdmin):
             messages.SUCCESS,
         )
 
+    @admin.display(description="Registered (IST)", ordering="created_at")
+    def registered_at_ist(self, obj: Registration) -> str:
+        return obj.registered_at_ist()
+
+    @admin.display(description="Status", ordering="status")
+    def status_label(self, obj: Registration) -> str:
+        return obj.status_label()
+
     @admin.display(description="WhatsApp sent")
     def group_invite_label(self, obj: Registration) -> str:
-        return obj.group_invite_label
+        return obj.group_invite_label()
 
     @admin.display(description="Email sent")
     def email_invite_label(self, obj: Registration) -> str:
-        return obj.email_invite_label
+        return obj.email_invite_label()
 
     @admin.display(description="Reminder sent")
     def reminder_label(self, obj: Registration) -> str:
-        return obj.reminder_label
+        return obj.reminder_label()
 
     @admin.action(description="Export sheet CSV")
     def export_sheet_csv(self, request, queryset):
@@ -88,7 +96,7 @@ class RegistrationAdmin(admin.ModelAdmin):
         for row in queryset.select_related("workshop").order_by("created_at"):
             writer.writerow(
                 [
-                    row.created_at.strftime("%d %b %Y %H:%M"),
+                    row.registered_at_ist(),
                     row.workshop.title,
                     row.full_name,
                     row.whatsapp,
@@ -98,10 +106,10 @@ class RegistrationAdmin(admin.ModelAdmin):
                     f"₹{row.amount:,.0f}",
                     row.payment_link,
                     row.payment_id or "—",
-                    row.status,
-                    row.group_invite_label,
-                    row.email_invite_label,
-                    row.reminder_label,
+                    row.status_label(),
+                    row.group_invite_label(),
+                    row.email_invite_label(),
+                    row.reminder_label(),
                 ]
             )
         return response

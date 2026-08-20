@@ -1,5 +1,6 @@
 from datetime import date, time
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 import re
 
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -12,6 +13,17 @@ from wagtail.admin.panels import FieldPanel, HelpPanel, InlinePanel, MultiFieldP
 from wagtail.fields import RichTextField
 from wagtail.images import get_image_model_string
 from wagtail.models import Orderable, Page
+
+IST = ZoneInfo("Asia/Kolkata")
+
+def format_ist(dt) -> str:
+    """Admin / CSV timestamp in India Standard Time, e.g. 21 Aug 2026, 01:59 AM IST."""
+    if not dt:
+        return "—"
+    if timezone.is_naive(dt):
+        dt = timezone.make_aware(dt, IST)
+    return timezone.localtime(dt, IST).strftime("%d %b %Y, %I:%M %p IST")
+
 
 TAKE_HOME_ICONS = ("cake", "book", "hat", "cup", "heart")
 TAKE_HOME_ORBS = ("pink", "blue", "orange", "green", "purple")
@@ -1059,7 +1071,11 @@ class Registration(models.Model):
         related_name="registrations",
         verbose_name="Event",
     )
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="Registered at",
+        help_text="Set automatically when the guest submits the form. Shown in IST.",
+    )
     full_name = models.CharField(max_length=120)
     whatsapp = models.CharField(max_length=15)
     email = models.EmailField()
@@ -1103,6 +1119,18 @@ class Registration(models.Model):
     def __str__(self) -> str:
         return f"{self.full_name} · {self.reference_id} · {self.status}"
 
+    def registered_at_ist(self) -> str:
+        return format_ist(self.created_at)
+
+    registered_at_ist.short_description = "Registered (IST)"
+    registered_at_ist.admin_order_field = "created_at"
+
+    def status_label(self) -> str:
+        return self.get_status_display()
+
+    status_label.short_description = "Status"
+    status_label.admin_order_field = "status"
+
     def save(self, *args, **kwargs):
         previous_status = None
         if self.pk:
@@ -1126,17 +1154,24 @@ class Registration(models.Model):
     def amount_paise(self) -> int:
         return int(self.amount * 100)
 
-    @property
     def group_invite_label(self) -> str:
-        return "YES" if self.group_invite_sent else "NO"
+        return "Yes" if self.group_invite_sent else "No"
 
-    @property
+    group_invite_label.short_description = "WhatsApp sent"
+    group_invite_label.admin_order_field = "group_invite_sent"
+    group_invite_label.boolean = False
+
     def email_invite_label(self) -> str:
-        return "YES" if self.email_invite_sent else "NO"
+        return "Yes" if self.email_invite_sent else "No"
 
-    @property
+    email_invite_label.short_description = "Email sent"
+    email_invite_label.admin_order_field = "email_invite_sent"
+
     def reminder_label(self) -> str:
-        return "YES" if self.reminder_sent else "NO"
+        return "Yes" if self.reminder_sent else "No"
+
+    reminder_label.short_description = "Reminder sent"
+    reminder_label.admin_order_field = "reminder_sent"
 
     @property
     def package_label(self) -> str:
