@@ -10,5 +10,11 @@
       "maxDuration": 60,
       "excludeFiles": "{.venv/**,venv/**,.git/**,media/**,staticfiles/**,.aws-sam/**,node_modules/**}"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/cron/reminders",
+      "schedule": "30 9 * * *"
+    }
+  ]
 }

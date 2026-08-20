@@ -1,37 +1,79 @@
 {% extends "workshop/base.html" %}
 
-{% block title %}
-  {% if registration.status == "PAID" %}Registration confirmed{% else %}Payment pending{% endif %}
-  · Cafe Orelo
-{% endblock %}
+{% block title %}{% if is_paid %}Booking confirmed{% else %}Payment pending{% endif %} · Cafe Orelo{% endblock %}
+{% block meta_description %}Cafe Orelo workshop booking status. Seats are confirmed only after payment.{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block og_title %}{% if is_paid %}Booking confirmed{% else %}Payment pending{% endif %} · Cafe Orelo{% endblock %}
+{% block og_description %}Cafe Orelo workshop booking status. Seats are confirmed only after payment.{% endblock %}
+{% block twitter_title %}{% if is_paid %}Booking confirmed{% else %}Payment pending{% endif %} · Cafe Orelo{% endblock %}
+{% block twitter_description %}Cafe Orelo workshop booking status. Seats are confirmed only after payment.{% endblock %}
 
 {% block content %}
 <section class="status-stage">
   <article class="status-card">
-    {% if registration.status == "PAID" %}
+    {% if is_paid %}
+      <p class="status-badge status-badge--paid">Confirmed / Paid</p>
       <p class="script-line">You’re in.</p>
       <h1 class="flyer-title flyer-title--status">You’re on the guest list, {{ registration.full_name }}.</h1>
       <p class="lede">
-        Payment of ₹{{ registration.amount|floatformat:0 }} is marked PAID.
+        Payment of ₹{{ registration.amount|floatformat:0 }} is confirmed
+        (reference <span class="mono">{{ registration.reference_id }}</span>).
         {% if workshop.group_invite_link %}
           Join the workshop WhatsApp group yourself — we do not add anyone automatically.
-          The same invite is emailed to {{ registration.email }}.
+          The same invite is also sent to WhatsApp {{ registration.whatsapp }} and emailed to {{ registration.email }}.
         {% else %}
-          Your confirmation is on file. The group invite will be sent once the kitchen publishes the link.
+          Your payment is on file. The WhatsApp group invite will appear here once the kitchen pastes it on the Event page.
         {% endif %}
       </p>
       {% if workshop.group_invite_link %}
-        <a class="btn btn-primary" href="{{ workshop.group_invite_link }}">Open WhatsApp group invite</a>
+        <a class="btn btn-whatsapp btn-full" href="{{ workshop.group_invite_link }}">Join the WhatsApp group</a>
       {% endif %}
     {% else %}
-      <p class="eyebrow">Awaiting payment</p>
-      <h1 class="flyer-title flyer-title--status">Your seat is held only after payment.</h1>
+      <p class="status-badge status-badge--pending">Pending payment</p>
+      <h1 class="flyer-title flyer-title--status">Pay to confirm your seat.</h1>
       <p class="lede">
+        Booking saved for {{ registration.full_name }}.
         Reference <span class="mono">{{ registration.reference_id }}</span>.
-        If you already paid, this page will update once Razorpay confirms.
+        Amount due:
+        <strong class="amount-due">₹{{ registration.amount|floatformat:0 }}</strong>
+        {% if uses_package_payment %}
+          {% if registration.package_label and registration.package_label != "—" %}
+            ({{ registration.package_label }} · {{ registration.seats }} seat{{ registration.seats|pluralize }}).
+          {% else %}
+            ({{ registration.seats }} seat{{ registration.seats|pluralize }}).
+          {% endif %}
+        {% else %}
+          (₹{{ price_per_seat|floatformat:0 }} × {{ registration.seats }} seat{{ registration.seats|pluralize }}).
+        {% endif %}
       </p>
-      {% if registration.payment_link %}
-        <a class="btn btn-primary" href="{{ registration.payment_link }}">Open payment link</a>
+      <p class="lede">The WhatsApp group invite appears here after payment is confirmed.</p>
+
+      {% if uses_static_payment_link and registration.payment_link %}
+        <p class="lede">
+          This Razorpay link is priced for <strong>one seat</strong>.
+          Pay it once for each of your {{ registration.seats }} seat{{ registration.seats|pluralize }}.
+        </p>
+        <ol class="seat-pay-list">
+          {% for step in seat_pay_steps %}
+            <li>
+              <a class="btn btn-primary btn-full" href="{{ registration.payment_link }}" target="_blank" rel="noopener">
+                Pay seat {{ step }} of {{ registration.seats }} — ₹{{ price_per_seat|floatformat:0 }}
+              </a>
+            </li>
+          {% endfor %}
+        </ol>
+      {% elif registration.payment_link %}
+        <a class="btn btn-primary btn-full" href="{{ registration.payment_link }}" target="_blank" rel="noopener">Pay now — ₹{{ registration.amount|floatformat:0 }}</a>
+      {% endif %}
+
+      {% if reported_paid %}
+        <p class="confirm-note" role="status">We’ll confirm shortly. Reload this page after Cafe Orelo or Razorpay marks you paid — this button does not confirm payment by itself.</p>
+      {% else %}
+        <form class="reported-paid-form" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="reported_paid" value="1">
+          <button class="btn btn-ghost" type="submit">I have paid</button>
+        </form>
       {% endif %}
     {% endif %}
 
@@ -48,6 +90,14 @@
           <strong>{{ workshop.format_flyer_date }} · {{ workshop.format_flyer_time }}</strong>
         </div>
       </li>
+      {% if registration.package_label and registration.package_label != "—" %}
+      <li>
+        <div>
+          <span class="fact-label">Package</span>
+          <strong>{{ registration.package_label }}</strong>
+        </div>
+      </li>
+      {% endif %}
       <li>
         <div>
           <span class="fact-label">Seats</span>
@@ -57,7 +107,7 @@
       <li>
         <div>
           <span class="fact-label">Status</span>
-          <strong>{{ registration.status }}</strong>
+          <strong>{% if is_paid %}Confirmed / Paid{% else %}Pending payment{% endif %}</strong>
         </div>
       </li>
     </ul>

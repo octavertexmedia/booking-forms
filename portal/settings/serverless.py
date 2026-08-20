@@ -20,6 +20,18 @@ if "default" in DATABASES:  # noqa: F405
 # WhiteNoise is unused when static files are on S3; keep it harmless if S3 is unset.
 WHITENOISE_MANIFEST_STRICT = False
 
+# Production booking host — always allowed even if env vars are incomplete.
+_BOOKING_HOST = "bookings.healthyome.in"
+_BOOKING_ORIGIN = f"https://{_BOOKING_HOST}"
+if _BOOKING_HOST not in ALLOWED_HOSTS:  # noqa: F405
+    ALLOWED_HOSTS.append(_BOOKING_HOST)  # noqa: F405
+if ".vercel.app" not in ALLOWED_HOSTS:  # noqa: F405
+    ALLOWED_HOSTS.append(".vercel.app")  # noqa: F405
+if _BOOKING_ORIGIN not in CSRF_TRUSTED_ORIGINS:  # noqa: F405
+    CSRF_TRUSTED_ORIGINS.append(_BOOKING_ORIGIN)  # noqa: F405
+if "https://*.vercel.app" not in CSRF_TRUSTED_ORIGINS:  # noqa: F405
+    CSRF_TRUSTED_ORIGINS.append("https://*.vercel.app")  # noqa: F405
+
 # Vercel injects VERCEL=1 plus the deployment host. SQLite on the app disk is
 # not writable there, so fall back to /tmp until Neon URLs are set.
 if env("VERCEL"):  # noqa: F405

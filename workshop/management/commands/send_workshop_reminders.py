@@ -1,38 +1,26 @@
-from datetime import timedelta
-
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 
-from workshop.models import Registration, RegistrationStatus
-from workshop.whatsapp import send_reminder
+from workshop.reminders import send_due_reminders
 
 
 class Command(BaseCommand):
-    help = "Send the Saturday-evening reminder to paid guests whose workshop is tomorrow."
+    help = (
+        "Send email + WhatsApp reminders to PAID guests whose event starts "
+        "within the Event’s reminder-hours window."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--force",
             action="store_true",
-            help="Send to every unpaid-reminder PAID registration, ignoring the date check.",
+            help="Send to every unpaid-reminder PAID registration, ignoring the window.",
         )
 
     def handle(self, *args, **options):
-        today = timezone.localdate()
-        qs = Registration.objects.filter(
-            status=RegistrationStatus.PAID,
-            reminder_sent=False,
-        ).select_related("workshop")
-        if not options["force"]:
-            qs = qs.filter(workshop__workshop_date=today + timedelta(days=1))
-
-        sent = 0
-        skipped = 0
-        for registration in qs:
-            if send_reminder(registration):
-                sent += 1
-            else:
-                skipped += 1
+        result = send_due_reminders(force=options["force"])
         self.stdout.write(
-            self.style.SUCCESS(f"Reminders sent: {sent}. Failed or skipped: {skipped}.")
+            self.style.SUCCESS(
+                f"Reminders sent: {result['sent']}. "
+                f"Failed or skipped: {result['skipped']}."
+            )
         )

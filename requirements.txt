@@ -9,3 +9,4 @@ mangum>=0.19,<1
 gunicorn>=23,<24
 requests>=2.32,<3
 python-dotenv>=1.0,<2
+Pillow>=10.4,<12

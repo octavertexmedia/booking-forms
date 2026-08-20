@@ -22,6 +22,10 @@ class PaymentLink:
     raw: dict[str, Any]
 
 
+def has_api_keys() -> bool:
+    return bool(settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET)
+
+
 def _auth() -> tuple[str, str]:
     key_id = settings.RAZORPAY_KEY_ID
     key_secret = settings.RAZORPAY_KEY_SECRET

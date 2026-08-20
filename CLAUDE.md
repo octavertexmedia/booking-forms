@@ -21,6 +21,6 @@ Wagtail/Django registration portal for Cafe Oreloâ€™s tiramisu workshop: form â†
 ## Gotchas
 
 - Spec source of truth: `context.txt`. Do not add features the spec did not ask for.
-- Webhook signature = HMAC-SHA256 of the **raw** body with `RAZORPAY_WEBHOOK_SECRET`.
+- Webhook signature = HMAC-SHA256 of the **raw** body with `RAZORPAY_WEBHOOK_SECRET_TIRAMISU` or `RAZORPAY_WEBHOOK_SECRET`.
 - Never force-add guests to WhatsApp; only send the invite link after `PAID`.
 - Serverless: `portal.settings.serverless`, `handler.handler`, `CONN_MAX_AGE=0`, files on S3.

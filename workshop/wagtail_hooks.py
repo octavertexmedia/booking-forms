@@ -1,12 +1,15 @@
 from django.contrib import admin
 from django.templatetags.static import static
+from django.urls import reverse
 from django.utils.html import format_html
 from wagtail import hooks
 from wagtail.admin.views.home import UpgradeNotificationPanel
+from wagtail.admin.widgets.button import ListingButton
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
-from .models import Registration
+from .models import Registration, RegistrationStatus
+from .payments import confirm_paid
 
 admin.site.site_header = "Cafe Orelo Booking Forms"
 admin.site.site_title = "Cafe Orelo"
@@ -34,21 +37,30 @@ class RegistrationViewSet(SnippetViewSet):
     list_display = (
         "workshop",
         "full_name",
+        "package_name",
         "seats",
         "status",
         "payment_id",
-        "group_invite_sent",
         "email_invite_sent",
+        "group_invite_sent",
+        "reminder_sent",
         "reference_id",
     )
-    list_filter = ("workshop", "status", "group_invite_sent", "email_invite_sent")
-    search_fields = ("full_name", "email", "whatsapp", "reference_id", "payment_id")
+    list_filter = (
+        "workshop",
+        "status",
+        "email_invite_sent",
+        "group_invite_sent",
+        "reminder_sent",
+    )
+    search_fields = ("full_name", "email", "whatsapp", "reference_id", "payment_id", "package_name")
     list_export = (
         "created_at",
         "workshop",
         "full_name",
         "whatsapp",
         "email",
+        "package_name",
         "seats",
         "amount",
         "payment_link",
@@ -56,6 +68,7 @@ class RegistrationViewSet(SnippetViewSet):
         "status",
         "group_invite_sent",
         "email_invite_sent",
+        "reminder_sent",
         "reference_id",
     )
     export_filename = "cafe-orelo-registrations"
@@ -64,3 +77,24 @@ class RegistrationViewSet(SnippetViewSet):
 
 
 register_snippet(RegistrationViewSet)
+
+
+@hooks.register("register_snippet_listing_buttons")
+def registration_listing_buttons(snippet, user, next_url=None, **kwargs):
+    if not isinstance(snippet, Registration):
+        return
+    if snippet.status == RegistrationStatus.PAID:
+        return
+    if not user.has_perm("workshop.change_registration"):
+        return
+    yield ListingButton(
+        "Mark as paid",
+        reverse("admin_mark_paid", args=[snippet.pk]),
+        priority=10,
+    )
+
+
+@hooks.register("after_edit_snippet")
+def send_invites_when_marked_paid(request, instance):
+    if isinstance(instance, Registration) and instance.status == RegistrationStatus.PAID:
+        confirm_paid(instance, instance.payment_id or "admin")

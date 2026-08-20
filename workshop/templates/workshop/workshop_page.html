@@ -1,31 +1,42 @@
 {% extends "workshop/base.html" %}
 {% load wagtailcore_tags %}
 
-{% block title %}{{ page.workshop_subtitle }} · Cafe Orelo{% endblock %}
-{% block meta_description %}{{ page.workshop_subtitle }} at {{ page.venue }} on {{ page.format_date }}. Limited seats. Book your spot now.{% endblock %}
-
 {% block content %}
 <section class="flyer-split flyer-split--register">
   {% include "workshop/partials/flyer_copy.html" with workshop=page cta="register" %}
-  <div class="flyer-visual flyer-visual--register">
-    {% include "workshop/partials/flyer_portrait.html" with hero_image=page.hero_image chef_name=page.chef_display_name compact=True %}
-  </div>
 
   {% if page.is_sold_out %}
   <aside class="ticket ticket--soldout">
     <div class="ticket-head">
       <p class="ticket-brand">Sold out</p>
-      <p class="ticket-id">₹{{ page.price_per_seat|floatformat:0 }} / seat</p>
+      <p class="ticket-id">{% if page.packages.exists %}from ₹{{ page.starting_price|floatformat:0 }}{% else %}₹{{ page.price_per_seat|floatformat:0 }} / seat{% endif %}</p>
     </div>
     <div class="perforation" aria-hidden="true"></div>
     <p class="ticket-note">Every paid seat for this event is taken. Ask on WhatsApp if a later date opens.</p>
+  </aside>
+  {% elif not booking_configured %}
+  <aside class="ticket ticket--soldout">
+    <div class="ticket-head">
+      <p class="ticket-brand">Booking not configured</p>
+    </div>
+    <div class="perforation" aria-hidden="true"></div>
+    <p class="ticket-note">This event has no packages with a Razorpay payment link yet. Add at least one package with a Razorpay link on the Event page.</p>
+  </aside>
+  {% elif not has_bookable_package %}
+  <aside class="ticket ticket--soldout">
+    <div class="ticket-head">
+      <p class="ticket-brand">Not enough seats</p>
+      <p class="ticket-id">{% if page.packages.exists %}from ₹{{ page.starting_price|floatformat:0 }}{% else %}₹{{ page.price_per_seat|floatformat:0 }} / seat{% endif %}</p>
+    </div>
+    <div class="perforation" aria-hidden="true"></div>
+    <p class="ticket-note">The remaining seats are fewer than the packages on sale. Ask on WhatsApp if a seat frees up.</p>
   </aside>
   {% else %}
   <form class="ticket" method="post" novalidate id="registration-form">
     {% csrf_token %}
     <div class="ticket-head">
       <p class="ticket-brand">Reserve your seat</p>
-      <p class="ticket-id">₹{{ page.price_per_seat|floatformat:0 }} / seat</p>
+      <p class="ticket-id">{% if page.packages.exists %}from ₹{{ page.starting_price|floatformat:0 }}{% else %}₹{{ page.price_per_seat|floatformat:0 }} / seat{% endif %}</p>
     </div>
     <div class="perforation" aria-hidden="true"></div>
 
@@ -59,6 +70,15 @@
       {% endif %}
     </div>
 
+    {% if form.fields.package %}
+    <fieldset class="field seats">
+      <legend>{{ form.package.label }} *</legend>
+      {{ form.package }}
+      {% if form.package.errors %}
+        <p class="field-error" role="alert">{{ form.package.errors.0 }}</p>
+      {% endif %}
+    </fieldset>
+    {% elif form.fields.seats %}
     <fieldset class="field seats">
       <legend>{{ form.seats.label }} *</legend>
       {{ form.seats }}
@@ -66,6 +86,7 @@
         <p class="field-error" role="alert">{{ form.seats.errors.0 }}</p>
       {% endif %}
     </fieldset>
+    {% endif %}
 
     <p class="ticket-note">{{ page.form_note }}</p>
     {% if page.seats_remaining < page.seat_capacity %}

@@ -4,10 +4,11 @@ import re
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
-from wagtail.admin.panels import FieldPanel, HelpPanel, MultiFieldPanel
+from modelcluster.fields import ParentalKey
+from wagtail.admin.panels import FieldPanel, HelpPanel, InlinePanel, MultiFieldPanel
 from wagtail.fields import RichTextField
 from wagtail.images import get_image_model_string
-from wagtail.models import Page
+from wagtail.models import Orderable, Page
 
 TAKE_HOME_ICONS = ("cake", "book", "hat", "cup", "heart")
 TAKE_HOME_ORBS = ("pink", "blue", "orange", "green", "purple")
@@ -43,7 +44,8 @@ DEFAULT_EMAIL_BODY = (
     "📅 {{date}}\n"
     "⏰ {{time}}\n"
     "📍 {{venue}}\n"
-    "👩‍🍳 {{chef}}\n\n"
+    "👩‍🍳 {{chef}}\n"
+    "🎟️ Package: {{package}}\n\n"
     "Join the WhatsApp group for this workshop (the same invite we send on WhatsApp):\n"
     "{{group_invite_link}}\n\n"
     "Reference: {{reference}}\n"
@@ -52,6 +54,8 @@ DEFAULT_EMAIL_BODY = (
     "See you at {{venue}}!\n"
     "Cafe Orelo\n"
 )
+
+DEFAULT_REMINDER_EMAIL_SUBJECT = "Reminder: {{event}} at Cafe Orelo"
 
 DEFAULT_TAKE_HOME = (
     "Your own handmade eggless tiramisu\n"
@@ -63,10 +67,22 @@ DEFAULT_TAKE_HOME = (
 
 EVENT_HELP = (
     "<p><strong>How this event works</strong></p>"
-    "<p>Publish this page → share the URL → payments create unique Razorpay links "
-    "→ paid guests get WhatsApp + email with the group invite you paste below.</p>"
+    "<p>Publish this page → share the URL → guests pay → paid guests get WhatsApp + email "
+    "with the group invite you paste below.</p>"
+    "<p>Payment: add <strong>Packages</strong> below. Each package needs its own Razorpay "
+    "Payment Link. Guests pay that link once for the package. Add at least one package with "
+    "a Razorpay link — packages without a link stay hidden on the public form.</p>"
+    "<p>The single <strong>fallback Razorpay payment link</strong> is used only when this event "
+    "has no packages.</p>"
+    "<p><strong>Set Razorpay webhook to "
+    "<code>https://bookings.healthyome.in/webhooks/razorpay/</code> "
+    "for <code>payment.captured</code> and <code>payment_link.paid</code></strong> "
+    "(also subscribe to <code>payment.authorized</code> and <code>order.paid</code>). "
+    "Paste the webhook signing secret into Vercel as "
+    "<code>RAZORPAY_WEBHOOK_SECRET_TIRAMISU</code> "
+    "(or <code>RAZORPAY_WEBHOOK_SECRET</code>).</p>"
     "<p>To run another date or dish: in <strong>Pages</strong>, open Cafe Orelo and "
-    "<strong>Add Event</strong>, or copy this page and change the date, price, and invite links. "
+    "<strong>Add Event</strong>, or copy this page and change the date, packages, and invite links. "
     "The public booking URL is this page’s slug (for example <code>/tiramisu-workshop/</code>).</p>"
 )
 
@@ -95,13 +111,59 @@ class HomePage(Page):
     max_count = 1
 
     def get_context(self, request, *args, **kwargs):
+        from workshop import seo
+
         context = super().get_context(request, *args, **kwargs)
         events = list(
             WorkshopPage.objects.live().public().descendant_of(self).order_by("workshop_date")
         )
+        workshop = events[0] if events else None
         context["events"] = events
-        context["workshop"] = events[0] if events else None
+        context["workshop"] = workshop
         context["show_event_cards"] = len(events) > 1
+        context["canonical_url"] = seo.page_canonical(self)
+        context["og_type"] = "website"
+        context["og_image_url"] = seo.absolute_static(seo.OG_HOME)
+        context["robots"] = "index, follow, max-image-preview:large"
+        if workshop:
+            context["seo_title"] = self.seo_title or seo.default_title(workshop, for_home=True)
+            context["seo_description"] = self.search_description or seo.default_description(
+                workshop, for_home=True
+            )
+            context["og_image_alt"] = (
+                f"Cafe Orelo {workshop.workshop_subtitle} with Chef {workshop.chef_display_name()}, "
+                f"{workshop.format_date()}, {workshop.format_time_range()}, {seo.price_label(workshop)}"
+            )
+            if len(events) == 1:
+                context["event_json_ld"] = seo.json_ld_script(
+                    seo.graph_payload(
+                        seo.event_json_ld(workshop, canonical=seo.page_canonical(workshop))
+                    )
+                )
+            else:
+                context["event_json_ld"] = seo.json_ld_script(
+                    {
+                        "@context": "https://schema.org",
+                        "@type": "ItemList",
+                        "name": "Cafe Orelo workshops",
+                        "itemListElement": [
+                            {
+                                "@type": "ListItem",
+                                "position": index,
+                                "url": seo.page_canonical(event),
+                                "name": event.workshop_subtitle,
+                            }
+                            for index, event in enumerate(events, start=1)
+                        ],
+                    }
+                )
+        else:
+            context["seo_title"] = self.seo_title or f"Cafe Orelo Workshops | {seo.SITE_NAME}"
+            context["seo_description"] = (
+                self.search_description
+                or "Cafe Orelo workshops on HealthyOme Bookings. New hands-on classes are listed here when they go live."
+            )
+            context["og_image_alt"] = context.get("seo_og_default_alt", "Cafe Orelo workshop bookings")
         return context
 
 
@@ -168,6 +230,7 @@ class WorkshopPage(Page):
         default=3,
         validators=[MinValueValidator(1), MaxValueValidator(10)],
         verbose_name="Max seats one guest can book",
+        help_text="Used only when this event has no packages (fallback seat picker).",
     )
     seat_capacity = models.PositiveSmallIntegerField(
         default=20,
@@ -207,6 +270,14 @@ class WorkshopPage(Page):
         verbose_name="WhatsApp group invite link",
         help_text="Paste the group invite. Sent only after payment — we never force-add anyone.",
     )
+    payment_link_url = models.URLField(
+        blank=True,
+        verbose_name="Fallback Razorpay payment link (per seat)",
+        help_text=(
+            "Used only if this event has no packages. Shared rzp.io URL priced for one seat; "
+            "multi-seat guests pay that same link once per seat. Prefer adding Packages instead."
+        ),
+    )
     payment_description = models.CharField(
         max_length=180,
         default="Cafe Orelo workshop",
@@ -227,10 +298,28 @@ class WorkshopPage(Page):
         ),
         default=DEFAULT_CONFIRMATION,
     )
+    reminder_hours_before = models.PositiveSmallIntegerField(
+        default=24,
+        validators=[MinValueValidator(1), MaxValueValidator(168)],
+        verbose_name="Reminder hours before start",
+        help_text=(
+            "Send the reminder this many hours before the event start "
+            "(email + WhatsApp). Default 24. Vercel cron runs daily at 15:00 IST."
+        ),
+    )
     reminder_template = models.TextField(
-        verbose_name="WhatsApp reminder (day before)",
+        verbose_name="Reminder message (WhatsApp + email)",
         default=DEFAULT_REMINDER,
-        help_text="Same placeholders as the confirmation message.",
+        help_text=(
+            "Used for both WhatsApp and the reminder email body. Same placeholders "
+            "as the confirmation message, plus {{package}}."
+        ),
+    )
+    reminder_email_subject = models.CharField(
+        max_length=180,
+        default=DEFAULT_REMINDER_EMAIL_SUBJECT,
+        verbose_name="Reminder email subject",
+        help_text="Same placeholders as the reminder message.",
     )
     email_subject = models.CharField(
         max_length=180,
@@ -244,7 +333,8 @@ class WorkshopPage(Page):
         help_text=(
             "Sent after payment with the WhatsApp group invite. Placeholders: "
             "{{name}}, {{event}}, {{date}}, {{time}}, {{venue}}, {{chef}}, "
-            "{{group_invite_link}}, {{invite_link}}, {{amount}}, {{reference}}, {{seats}}"
+            "{{group_invite_link}}, {{invite_link}}, {{amount}}, {{reference}}, "
+            "{{seats}}, {{package}}"
         ),
     )
 
@@ -282,6 +372,7 @@ class WorkshopPage(Page):
                 FieldPanel("max_seats_per_booking"),
                 FieldPanel("seat_capacity"),
                 FieldPanel("form_note"),
+                FieldPanel("payment_link_url"),
                 FieldPanel("payment_description"),
                 FieldPanel("reference_prefix"),
             ],
@@ -289,9 +380,23 @@ class WorkshopPage(Page):
         ),
         MultiFieldPanel(
             [
+                HelpPanel(
+                    content=(
+                        "<p>Each package needs its own Razorpay Payment Link. "
+                        "Guests pay that link once for the package.</p>"
+                        "<p>Add at least one package with a Razorpay link. "
+                        "Packages without a link stay hidden on the public form.</p>"
+                    ),
+                    heading="How packages work",
+                ),
+                InlinePanel("packages", label="Package"),
+            ],
+            heading="Packages",
+        ),
+        MultiFieldPanel(
+            [
                 FieldPanel("group_invite_link"),
                 FieldPanel("confirmation_template"),
-                FieldPanel("reminder_template"),
             ],
             heading="WhatsApp",
         ),
@@ -301,6 +406,14 @@ class WorkshopPage(Page):
                 FieldPanel("email_body"),
             ],
             heading="Email sent after payment",
+        ),
+        MultiFieldPanel(
+            [
+                FieldPanel("reminder_hours_before"),
+                FieldPanel("reminder_template"),
+                FieldPanel("reminder_email_subject"),
+            ],
+            heading="Reminders",
         ),
     ]
 
@@ -321,14 +434,60 @@ class WorkshopPage(Page):
         return super().serve(request, *args, **kwargs)
 
     def get_context(self, request, *args, **kwargs):
+        from workshop import seo
+
         from .forms import RegistrationForm
 
         context = super().get_context(request, *args, **kwargs)
         context["form"] = getattr(request, "_registration_form", None) or RegistrationForm(self)
         context["seat_choices"] = self.seat_choices()
+        context["booking_configured"] = self.booking_is_configured()
+        context["has_bookable_package"] = self.has_bookable_package()
+        context["canonical_url"] = seo.page_canonical(self)
+        context["og_type"] = "event"
+        context["og_image_url"] = seo.og_image_for_workshop(self)
+        context["robots"] = "index, follow, max-image-preview:large"
+        context["seo_title"] = self.seo_title or seo.default_title(self)
+        context["seo_description"] = self.search_description or seo.default_description(self)
+        context["og_image_alt"] = (
+            f"{self.workshop_subtitle} at {self.venue} with Chef {self.chef_display_name()}, "
+            f"{self.format_date()}, {self.format_time_range()}, {seo.price_label(self)}"
+        )
+        context["event_json_ld"] = seo.json_ld_script(
+            seo.graph_payload(seo.event_json_ld(self, canonical=context["canonical_url"]))
+        )
         return context
 
+    def bookable_packages(self) -> list["WorkshopPackage"]:
+        remaining = self.seats_remaining()
+        return [
+            package
+            for package in self.packages.all()
+            if (package.payment_link or "").strip() and package.seats <= remaining
+        ]
+
+    def booking_is_configured(self) -> bool:
+        if self.packages.exists():
+            return any((package.payment_link or "").strip() for package in self.packages.all())
+        return bool((self.payment_link_url or "").strip())
+
+    def has_bookable_package(self) -> bool:
+        if self.packages.exists():
+            return bool(self.bookable_packages())
+        return self.booking_is_configured() and self.seats_remaining() > 0
+
+    def starting_price(self) -> Decimal:
+        prices = [
+            package.price
+            for package in self.packages.all()
+            if (package.payment_link or "").strip()
+        ]
+        if prices:
+            return min(prices)
+        return self.price_per_seat
+
     def seat_choices(self) -> list[tuple[int, Decimal, str]]:
+        """Fallback 1…N seat picker when this event has no packages."""
         choices = []
         for seats in range(1, self.max_seats_per_booking + 1):
             amount = (self.price_per_seat * seats).quantize(Decimal("0.01"))
@@ -407,6 +566,10 @@ class WorkshopPage(Page):
             return name[5:].strip()
         return name or "Aanchal Wadhwa"
 
+    def uses_static_payment_link(self) -> bool:
+        """True when guests pay the event-level per-seat URL (no packages)."""
+        return not self.packages.exists() and bool((self.payment_link_url or "").strip())
+
     def payment_link_description(self, reference_id: str) -> str:
         base = (self.payment_description or self.title or "Cafe Orelo workshop").strip()
         title = (self.title or "").strip()
@@ -426,6 +589,71 @@ class WorkshopPage(Page):
         )
         sequence = int(last.rsplit("-", 1)[-1]) + 1 if last else 1
         return f"{prefix}{sequence:03d}"
+
+
+class WorkshopPackage(Orderable):
+    """One bookable option on an Event — name, seats, price, and its Razorpay link."""
+
+    page = ParentalKey(
+        "workshop.WorkshopPage",
+        on_delete=models.CASCADE,
+        related_name="packages",
+    )
+    name = models.CharField(
+        max_length=80,
+        verbose_name="Package name",
+        help_text="e.g. “1 Seat”, “2 Seats”, “Couple”.",
+    )
+    seats = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(50)],
+        verbose_name="Seats included",
+    )
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("1.00"))],
+        verbose_name="Price (₹)",
+        help_text="INR, rupees. Shown as ₹ on the public form.",
+    )
+    payment_link = models.URLField(
+        blank=True,
+        verbose_name="Razorpay payment link",
+        help_text=(
+            "The rzp.io or Razorpay Payment Link URL for this package. "
+            "Leave empty to hide this option on the public form."
+        ),
+    )
+    note = models.CharField(
+        max_length=160,
+        blank=True,
+        verbose_name="Short note",
+        help_text="Optional. Shown next to the package on the public form.",
+    )
+
+    panels = [
+        FieldPanel("name"),
+        FieldPanel("seats"),
+        FieldPanel("price"),
+        FieldPanel("payment_link"),
+        FieldPanel("note"),
+    ]
+
+    class Meta(Orderable.Meta):
+        verbose_name = "Package"
+        verbose_name_plural = "Packages"
+
+    def __str__(self) -> str:
+        return f"{self.name} · {self.seats} seat{'s' if self.seats != 1 else ''} · ₹{self.price:,.0f}"
+
+    def public_label(self) -> str:
+        label = f"{self.name} — ₹{self.price:,.0f}"
+        note = (self.note or "").strip()
+        if note:
+            label = f"{label} · {note}"
+        return label
+
+    def has_payment_link(self) -> bool:
+        return bool((self.payment_link or "").strip())
 
 
 class RegistrationStatus(models.TextChoices):
@@ -449,8 +677,17 @@ class Registration(models.Model):
     whatsapp = models.CharField(max_length=15)
     email = models.EmailField()
     seats = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
+        validators=[MinValueValidator(1), MaxValueValidator(50)]
     )
+    package = models.ForeignKey(
+        WorkshopPackage,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="registrations",
+        verbose_name="Package",
+    )
+    package_name = models.CharField(max_length=80, blank=True, verbose_name="Package name")
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_link = models.URLField(blank=True)
     payment_link_id = models.CharField(max_length=40, blank=True, db_index=True)
@@ -470,7 +707,7 @@ class Registration(models.Model):
         default=False,
         verbose_name="Email invite sent",
     )
-    reminder_sent = models.BooleanField(default=False)
+    reminder_sent = models.BooleanField(default=False, verbose_name="Reminder sent")
     raw_webhook = models.JSONField(blank=True, null=True)
 
     class Meta:
@@ -478,6 +715,25 @@ class Registration(models.Model):
 
     def __str__(self) -> str:
         return f"{self.full_name} · {self.reference_id} · {self.status}"
+
+    def save(self, *args, **kwargs):
+        previous_status = None
+        if self.pk:
+            previous_status = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values_list("status", flat=True)
+                .first()
+            )
+        super().save(*args, **kwargs)
+        became_paid = (
+            self.status == RegistrationStatus.PAID
+            and previous_status != RegistrationStatus.PAID
+        )
+        if became_paid:
+            from .payments import confirm_paid
+
+            confirm_paid(self, self.payment_id or "admin")
 
     @property
     def amount_paise(self) -> int:
@@ -490,3 +746,15 @@ class Registration(models.Model):
     @property
     def email_invite_label(self) -> str:
         return "YES" if self.email_invite_sent else "NO"
+
+    @property
+    def reminder_label(self) -> str:
+        return "YES" if self.reminder_sent else "NO"
+
+    @property
+    def package_label(self) -> str:
+        if self.package_name:
+            return self.package_name
+        if self.package_id:
+            return self.package.name
+        return "—"

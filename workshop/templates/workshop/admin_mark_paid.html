@@ -1,0 +1,27 @@
+{% extends "workshop/base.html" %}
+
+{% block title %}Mark as paid · Cafe Orelo{% endblock %}
+{% block meta_description %}Staff-only payment confirmation for Cafe Orelo workshop bookings.{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<section class="status-stage">
+  <article class="status-card">
+    <p class="eyebrow">Staff only</p>
+    <h1 class="flyer-title flyer-title--status">Mark this booking as paid?</h1>
+    <p class="lede">
+      {{ registration.full_name }} · {{ registration.seats }} seat{{ registration.seats|pluralize }} ·
+      ₹{{ registration.amount|floatformat:0 }} ·
+      <span class="mono">{{ registration.reference_id }}</span>
+    </p>
+    <p class="lede">
+      Current status: {{ registration.status }}.
+      This sends the same WhatsApp + email invites as the Razorpay webhook.
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-primary" type="submit">Mark as paid</button>
+    </form>
+  </article>
+</section>
+{% endblock %}

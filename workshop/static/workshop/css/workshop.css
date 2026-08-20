@@ -215,21 +215,12 @@ a {
 
 .flyer-split--register {
   grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr);
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    "copy visual"
-    "copy ticket";
-  align-items: stretch;
+  grid-template-areas: "copy ticket";
+  align-items: start;
 }
 
 .flyer-split--register .flyer-copy {
   grid-area: copy;
-}
-
-.flyer-split--register .flyer-visual {
-  grid-area: visual;
-  align-self: start;
-  min-height: 0;
 }
 
 .flyer-split--register .ticket {
@@ -546,7 +537,9 @@ a {
 
 .flyer-visual {
   position: relative;
-  min-height: 32rem;
+  align-self: stretch;
+  height: 100%;
+  min-height: 0;
   border-radius: 1.15rem;
   overflow: hidden;
   background: var(--forest-deep);
@@ -554,22 +547,20 @@ a {
 
 .flyer-portrait {
   margin: 0;
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
-  position: relative;
+  overflow: hidden;
 }
 
 .flyer-portrait img {
   display: block;
   width: 100%;
   height: 100%;
-  min-height: 32rem;
+  min-height: 0;
   object-fit: cover;
-  object-position: 50% 12%;
-}
-
-.flyer-portrait--compact img {
-  min-height: 18rem;
-  max-height: 22rem;
+  object-position: top center;
 }
 
 .chef-chip {
@@ -611,21 +602,6 @@ a {
   font-size: 0.68rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.flyer-visual--register {
-  min-height: 0;
-}
-
-.flyer-visual--register .flyer-portrait {
-  height: auto;
-}
-
-.flyer-visual--register .flyer-portrait img,
-.flyer-visual--register .flyer-portrait--compact img {
-  height: auto;
-  min-height: 16rem;
-  max-height: 22rem;
 }
 
 .btn {
@@ -936,6 +912,86 @@ a {
   letter-spacing: 0.04em;
 }
 
+.amount-due {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 0.7rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  font-family: var(--display);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.status-badge--pending {
+  background: rgba(255, 213, 79, 0.16);
+  color: var(--gold);
+}
+
+.status-badge--paid {
+  background: rgba(162, 212, 0, 0.18);
+  color: var(--lime);
+}
+
+.btn-whatsapp {
+  background: var(--wa);
+  color: #063516;
+  margin-top: 0.35rem;
+}
+
+.btn-whatsapp:hover {
+  background: #1ebe5d;
+  color: #063516;
+}
+
+.btn-ghost {
+  margin-top: 0.85rem;
+  background: transparent;
+  color: var(--paper);
+  box-shadow: none;
+  border: 1px solid rgba(255, 246, 220, 0.28);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 246, 220, 0.08);
+}
+
+.reported-paid-form {
+  margin-top: 0.35rem;
+}
+
+.confirm-note {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  background: rgba(162, 212, 0, 0.1);
+  border: 1px solid rgba(162, 212, 0, 0.28);
+  border-radius: 0.75rem;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.seat-pay-list {
+  list-style: none;
+  margin: 1.1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.seat-pay-note {
+  margin-top: 0.95rem;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
 @media (max-width: 860px) {
   .site-header {
     flex-direction: column;
@@ -950,31 +1006,21 @@ a {
     grid-template-columns: 1fr;
     grid-template-rows: none;
     grid-template-areas:
-      "visual"
       "copy"
       "ticket";
   }
 
   .flyer-visual {
     order: -1;
-    min-height: 0;
-  }
-
-  .flyer-split--register .flyer-visual {
-    order: 0;
+    height: 18rem;
+    max-height: 18rem;
     min-height: 0;
   }
 
   .flyer-portrait img {
-    min-height: 22rem;
-    max-height: 28rem;
-    object-position: 50% 10%;
-  }
-
-  .flyer-split--register .flyer-portrait img,
-  .flyer-split--register .flyer-portrait--compact img {
-    min-height: 14rem;
-    max-height: 18rem;
+    min-height: 0;
+    max-height: none;
+    object-position: top center;
   }
 
   .fact-row,

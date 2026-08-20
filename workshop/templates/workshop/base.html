@@ -1,15 +1,47 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-IN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}{{ page.title }} · Cafe Orelo{% endblock %}</title>
-  <meta name="description" content="{% block meta_description %}Eggless Tiramisu Making Workshop at Cafe Orelo with pastry chef Aanchal Wadhwa. Sunday 23 August 2026, 3:00 PM to 5:00 PM. ₹1499.{% endblock %}">
+  <title>{% block title %}{{ seo_title|default:"Cafe Orelo Workshops | HealthyOme Bookings" }}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}{{ seo_description|default:"Book Cafe Orelo workshops on HealthyOme Bookings. Eggless tiramisu class with Chef Aanchal Wadhwa, Sunday 23 Aug 2026, 3–5 PM, ₹1499." }}{% endblock %}">
+  <meta name="robots" content="{% block robots %}{{ robots|default:'index, follow, max-image-preview:large' }}{% endblock %}">
+  <link rel="canonical" href="{% block canonical %}{{ canonical_url|default:public_base_url }}{% endblock %}">
+  <link rel="alternate" hreflang="en-IN" href="{% block hreflang %}{{ canonical_url|default:public_base_url }}{% endblock %}">
+  <link rel="alternate" hreflang="x-default" href="{% block hreflang_default %}{{ canonical_url|default:public_base_url }}{% endblock %}">
+  <meta name="theme-color" content="#0b1f12">
+  <meta name="application-name" content="{{ seo_site_name }}">
+  <meta name="author" content="Cafe Orelo">
+  <meta property="og:site_name" content="{{ seo_site_name }}">
+  <meta property="og:locale" content="{{ seo_og_locale }}">
+  <meta property="og:type" content="{% block og_type %}{{ og_type|default:'website' }}{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}{{ seo_title|default:'Cafe Orelo Tiramisu Workshop | HealthyOme Bookings' }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ seo_description|default:'Book Cafe Orelo’s eggless tiramisu workshop with Chef Aanchal Wadhwa. Sunday 23 Aug 2026, 3–5 PM. ₹1499 per seat.' }}{% endblock %}">
+  <meta property="og:url" content="{% block og_url %}{{ canonical_url|default:public_base_url }}{% endblock %}">
+  <meta property="og:image" content="{% block og_image %}{{ og_image_url|default:seo_og_home_url }}{% endblock %}">
+  <meta property="og:image:secure_url" content="{% block og_image_secure %}{{ og_image_url|default:seo_og_home_url }}{% endblock %}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="{% block og_image_alt %}{{ og_image_alt|default:seo_og_default_alt }}{% endblock %}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{% block twitter_title %}{{ seo_title|default:'Cafe Orelo Tiramisu Workshop | HealthyOme Bookings' }}{% endblock %}">
+  <meta name="twitter:description" content="{% block twitter_description %}{{ seo_description|default:'Book Cafe Orelo’s eggless tiramisu workshop with Chef Aanchal Wadhwa. Sunday 23 Aug 2026, 3–5 PM. ₹1499 per seat.' }}{% endblock %}">
+  <meta name="twitter:image" content="{% block twitter_image %}{{ og_image_url|default:seo_og_home_url }}{% endblock %}">
+  <meta name="twitter:image:alt" content="{% block twitter_image_alt %}{{ og_image_alt|default:seo_og_default_alt }}{% endblock %}">
+  <link rel="icon" href="{{ seo_favicon_url }}" type="image/png" sizes="128x128">
+  <link rel="apple-touch-icon" href="{{ seo_apple_touch_url }}" sizes="180x180">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Oswald:wght@500;600;700&family=Outfit:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'workshop/css/workshop.css' %}?v=20260819-logo-white">
+  <link rel="stylesheet" href="{% static 'workshop/css/workshop.css' %}?v=20260820-crop-home">
+  <script type="application/ld+json">{{ website_json_ld|safe }}</script>
+  {% block json_ld %}
+  {% if event_json_ld %}
+  <script type="application/ld+json">{{ event_json_ld|safe }}</script>
+  {% endif %}
+  {% endblock %}
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>

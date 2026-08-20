@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.sitemaps",
     "django.contrib.staticfiles",
 ]
 
@@ -79,6 +80,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "workshop.context_processors.public_seo",
             ],
         },
     },
@@ -153,20 +155,34 @@ PUBLIC_BASE_URL = env("PUBLIC_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
 RAZORPAY_KEY_ID = env("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = env("RAZORPAY_KEY_SECRET")
-RAZORPAY_WEBHOOK_SECRET = env("RAZORPAY_WEBHOOK_SECRET")
+# Bookings webhook secret. Prefer the tiramisu-specific name; keep the generic
+# name as fallback so older Vercel envs still verify signatures.
+RAZORPAY_WEBHOOK_SECRET = env("RAZORPAY_WEBHOOK_SECRET_TIRAMISU") or env(
+    "RAZORPAY_WEBHOOK_SECRET"
+)
 RAZORPAY_MOCK = env_bool("RAZORPAY_MOCK", False)
 
 WHATSAPP_API_URL = env("WHATSAPP_API_URL")
 WHATSAPP_API_TOKEN = env("WHATSAPP_API_TOKEN")
 WHATSAPP_EXTRA_PAYLOAD = env("WHATSAPP_EXTRA_PAYLOAD", "{}")
 
+CRON_SECRET = env("CRON_SECRET")
+
 EMAIL_HOST = env("EMAIL_HOST")
-EMAIL_PORT = int(env("EMAIL_PORT", "587") or "587")
+EMAIL_PORT = int(env("EMAIL_PORT", "465") or "465")
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
-EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
-EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", False)
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "Cafe Orelo <noreply@localhost>")
+# Port 465 = implicit SSL. Port 587 = STARTTLS. Django forbids both True.
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", EMAIL_PORT == 465)
+EMAIL_USE_TLS = False if EMAIL_USE_SSL else env_bool("EMAIL_USE_TLS", EMAIL_PORT == 587)
+DEFAULT_FROM_EMAIL = (
+    env("DEFAULT_FROM_EMAIL")
+    or (f"Cafe Orelo <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "")
+    or "Cafe Orelo <info@healthyome.in>"
+)
+# Optional HTTP mail (e.g. Resend) if Vercel blocks outbound SMTP 465.
+EMAIL_HTTP_URL = env("EMAIL_HTTP_URL")
+EMAIL_HTTP_TOKEN = env("EMAIL_HTTP_TOKEN")
 _email_backend = env("EMAIL_BACKEND")
 if _email_backend:
     EMAIL_BACKEND = _email_backend
@@ -176,6 +192,33 @@ elif DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "plain": {"format": "%(levelname)s %(name)s %(message)s"},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "plain",
+        },
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "workshop": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+    },
+}
 
 AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
 AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", "ap-south-1")

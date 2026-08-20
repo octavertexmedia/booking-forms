@@ -61,6 +61,7 @@ def send_confirmation(registration: Registration) -> bool:
 
 
 def send_reminder(registration: Registration) -> bool:
+    """Send the WhatsApp reminder. Does not flip reminder_sent — callers own that flag."""
     workshop = registration.workshop
     message = render_template(workshop.reminder_template, workshop, registration)
     sent = send_whatsapp(
@@ -68,11 +69,7 @@ def send_reminder(registration: Registration) -> bool:
         message,
         extra={"name": registration.full_name, "template": "workshop_reminder"},
     )
-    if sent or _log_only_counts_as_sent():
-        registration.reminder_sent = True
-        registration.save(update_fields=["reminder_sent"])
-        return True
-    return False
+    return bool(sent or _log_only_counts_as_sent())
 
 
 def _log_only_counts_as_sent() -> bool:

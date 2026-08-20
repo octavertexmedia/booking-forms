@@ -8,6 +8,9 @@ from .models import Registration, WorkshopPage
 def message_context(workshop: WorkshopPage, registration: Registration) -> dict[str, str]:
     invite = workshop.group_invite_link or "(invite link not set yet)"
     event_name = workshop.workshop_subtitle or workshop.title
+    package = registration.package_label
+    if package == "—":
+        package = f"{registration.seats} seat{'s' if registration.seats != 1 else ''}"
     return {
         "{{name}}": registration.full_name,
         "{{event}}": event_name,
@@ -21,6 +24,7 @@ def message_context(workshop: WorkshopPage, registration: Registration) -> dict[
         "{{chef}}": workshop.chef_name,
         "{{reference}}": registration.reference_id,
         "{{seats}}": str(registration.seats),
+        "{{package}}": package,
     }
 
 
