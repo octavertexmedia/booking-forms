@@ -94,7 +94,7 @@
     {% endif %}
 
     <button class="btn btn-primary btn-full" type="submit" id="submit-btn">
-      Book your spot now
+      {{ page.cta_label|default:"Book your spot now" }}
     </button>
   </form>
   {% endif %}

@@ -60,7 +60,7 @@
   </section>
 
   <p class="price-bar">
-    <span>Registration charges</span>
+    <span>{{ workshop.price_bar_label|default:"Registration charges" }}</span>
     <strong>₹{{ workshop.price_per_seat|floatformat:0 }}/-</strong>
   </p>
 
@@ -72,7 +72,7 @@
       {% if workshop.is_sold_out %}Sold out{% else %}{{ workshop.limited_seats_line }}{% endif %}
     </p>
     {% if cta == "book" and not workshop.is_sold_out %}
-      <a class="btn btn-primary" href="{{ book_url }}">Book your spot now</a>
+      <a class="btn btn-primary" href="{{ book_url }}">{{ workshop.cta_label|default:"Book your spot now" }}</a>
     {% endif %}
     {% if workshop.enquiry_whatsapp_url %}
     <a class="whatsapp-link" href="{{ workshop.enquiry_whatsapp_url }}">

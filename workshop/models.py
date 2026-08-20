@@ -3,7 +3,9 @@ import re
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import format_html, format_html_join, mark_safe
 from modelcluster.fields import ParentalKey
 from wagtail.admin.panels import FieldPanel, HelpPanel, InlinePanel, MultiFieldPanel
 from wagtail.fields import RichTextField
@@ -66,9 +68,29 @@ DEFAULT_TAKE_HOME = (
 )
 
 PACKAGE_HELP = (
-    "Add or delete packages here. Guests see published packages. "
-    "Each row needs a name, seats, and price (₹). "
-    "The Razorpay URL is optional — checkout creates a unique Payment Link."
+    "Use Add package to create a row. Fill name, seats, and price (₹). "
+    "Use Delete on a row to remove it. Drag or use the arrows to reorder. "
+    "Guests only see published packages. The Razorpay URL is optional — "
+    "checkout creates a unique Payment Link."
+)
+
+HOME_HELP = (
+    "<p><strong>Home vs Event — read this first</strong></p>"
+    "<p>This is the landing at <code>/</code>. It does <em>not</em> own the "
+    "tiramisu flyer you see when one workshop is live.</p>"
+    "<p>When <strong>one Event</strong> is published, the public homepage "
+    "shows that Event’s flyer: title, tagline, kicker, gold banner, date, "
+    "time, venue, take-homes, price bar, CTA, enquiry WhatsApp, and the "
+    "Event photo. Edit those on the Event page (Pages → that Event, usually "
+    "<a href=\"/admin/pages/4/edit/\">Tiramisu Making Workshop</a>), then "
+    "publish.</p>"
+    "<p>When <strong>two or more Events</strong> are live, Home shows a card "
+    "list. The listing headings and welcome line below are what guests see "
+    "then.</p>"
+    "<p><strong>Fields on this Home page that do render:</strong> welcome "
+    "line (whenever it is filled), Home hero image (replaces the Event photo "
+    "on this URL only), listing tagline / title / kicker, empty-state line, "
+    "and the card CTA label.</p>"
 )
 
 EVENT_HELP = (
@@ -77,7 +99,7 @@ EVENT_HELP = (
     "<strong>Join the WhatsApp group</strong> (the invite you paste below). "
     "Paid guests also get WhatsApp + email with the same invite.</p>"
     "<p>Payment: use <strong>Add package</strong> below (name, seats, price). "
-    "Delete a row with the bin icon. Reorder with the handles. "
+    "Delete a row with the <strong>Delete</strong> button. Reorder with Up / Down / Reorder. "
     "On submit we always create a <strong>unique Razorpay Payment Link</strong> "
     "for that booking (reference <code>TIRAMISU-…</code>). "
     "The package’s static rzp.io URL is unused for checkout when API keys are set.</p>"
@@ -94,7 +116,59 @@ EVENT_HELP = (
     "<p>To run another date or dish: in <strong>Pages</strong>, open Cafe Orelo and "
     "<strong>Add Event</strong>, or copy this page and change the date, packages, and invite links. "
     "The public booking URL is this page’s slug (for example <code>/tiramisu-workshop/</code>).</p>"
+    "<p>The public homepage flyer (when this is the only live Event) uses the "
+    "Flyer copy + Event fields on <em>this</em> page — not the Home page.</p>"
 )
+
+
+class HomeGuidePanel(HelpPanel):
+    """Tells kitchen staff which page owns the flyer they see on /."""
+
+    class BoundPanel(HelpPanel.BoundPanel):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            self.content = mark_safe(HOME_HELP + self._event_links())
+
+        def _event_links(self) -> str:
+            page = self.instance
+            if not page or not page.pk:
+                return (
+                    "<p>Save this page, then add an Event under it to control "
+                    "the flyer.</p>"
+                )
+            events = list(
+                WorkshopPage.objects.descendant_of(page).order_by("workshop_date")
+            )
+            if not events:
+                return (
+                    "<p>No Event pages yet. Open Pages → this Home → "
+                    "<strong>Add Event</strong>.</p>"
+                )
+            live = [event for event in events if event.live]
+            featured_id = live[0].pk if len(live) == 1 else None
+            rows = []
+            for event in events:
+                note = ""
+                if featured_id and event.pk == featured_id:
+                    note = " — public homepage flyer comes from this Event"
+                state = "published" if event.live else "draft"
+                rows.append(
+                    (
+                        reverse("wagtailadmin_pages:edit", args=[event.pk]),
+                        event.get_admin_display_title(),
+                        f"{state}{note}",
+                    )
+                )
+            return str(
+                format_html(
+                    "<p><strong>Events under this Home</strong></p><ul>{}</ul>",
+                    format_html_join(
+                        "",
+                        '<li><a href="{}">{}</a> ({})</li>',
+                        rows,
+                    ),
+                )
+            )
 
 
 class HomePage(Page):
@@ -103,7 +177,10 @@ class HomePage(Page):
     intro = RichTextField(
         blank=True,
         verbose_name="Welcome line",
-        help_text="Short welcome copy shown above the event cards when more than one workshop is live.",
+        help_text=(
+            "Shown on the public homepage whenever this is filled — above the "
+            "single-event flyer, or above the card list when several events are live."
+        ),
     )
     hero_image = models.ForeignKey(
         get_image_model_string(),
@@ -111,11 +188,62 @@ class HomePage(Page):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="+",
+        verbose_name="Home hero image",
+        help_text=(
+            "Optional. Replaces the Event photo on the public homepage only. "
+            "Leave blank to use the Event’s hero image (or the default chef crop)."
+        ),
+    )
+    listing_tagline = models.CharField(
+        max_length=80,
+        default="Learn. Create. Indulge.",
+        verbose_name="Listing tagline",
+        help_text="Script line above the heading when several events are listed, or none are live.",
+    )
+    listing_title = models.CharField(
+        max_length=40,
+        default="Bookings",
+        verbose_name="Listing title",
+        help_text="Big word on the multi-event homepage. Unused when one Event flyer is showing.",
+    )
+    listing_kicker = models.CharField(
+        max_length=80,
+        default="Cafe Orelo workshops",
+        verbose_name="Listing kicker",
+        help_text="Small line under the listing title.",
+    )
+    empty_lede = models.CharField(
+        max_length=180,
+        default="No workshop is published yet. Check back shortly.",
+        verbose_name="Empty-state line",
+        help_text="Shown when no Event is published.",
+    )
+    card_cta_label = models.CharField(
+        max_length=40,
+        default="Book your spot",
+        verbose_name="Card button label",
+        help_text="Button on each event card when several events are live.",
     )
 
     content_panels = Page.content_panels + [
-        FieldPanel("intro"),
-        FieldPanel("hero_image"),
+        HomeGuidePanel(heading="What this page controls"),
+        MultiFieldPanel(
+            [
+                FieldPanel("intro"),
+                FieldPanel("hero_image"),
+            ],
+            heading="Home content (renders on /)",
+        ),
+        MultiFieldPanel(
+            [
+                FieldPanel("listing_tagline"),
+                FieldPanel("listing_title"),
+                FieldPanel("listing_kicker"),
+                FieldPanel("empty_lede"),
+                FieldPanel("card_cta_label"),
+            ],
+            heading="Listing headings (several events, or none)",
+        ),
     ]
 
     max_count = 1
@@ -131,6 +259,7 @@ class HomePage(Page):
         context["events"] = events
         context["workshop"] = workshop
         context["show_event_cards"] = len(events) > 1
+        context["home_hero"] = self.hero_image or (workshop.hero_image if workshop else None)
         context["canonical_url"] = seo.page_canonical(self)
         context["og_type"] = "website"
         context["og_image_url"] = seo.absolute_static(seo.OG_HOME)
@@ -229,6 +358,18 @@ class WorkshopPage(Page):
         max_length=120,
         default="Limited seats. Book your spot now!",
         verbose_name="Limited seats line",
+    )
+    price_bar_label = models.CharField(
+        max_length=80,
+        default="Registration charges",
+        verbose_name="Price bar label",
+        help_text="Left side of the magenta price bar on the flyer.",
+    )
+    cta_label = models.CharField(
+        max_length=40,
+        default="Book your spot now",
+        verbose_name="Flyer button label",
+        help_text="The green Book button on the homepage flyer. The Event form button uses the same label.",
     )
     price_per_seat = models.DecimalField(
         max_digits=8,
@@ -372,9 +513,20 @@ class WorkshopPage(Page):
                 FieldPanel("take_home_intro"),
                 FieldPanel("take_home_list"),
                 FieldPanel("limited_seats_line"),
+                FieldPanel("price_bar_label"),
+                FieldPanel("cta_label"),
                 FieldPanel("enquiry_whatsapp"),
             ],
-            heading="Flyer copy",
+            heading="Flyer copy (homepage + this Event)",
+        ),
+        InlinePanel(
+            "packages",
+            heading="Packages — add, delete, reorder",
+            label="package",
+            min_num=0,
+            max_num=20,
+            classname="workshop-packages-panel",
+            help_text=PACKAGE_HELP,
         ),
         MultiFieldPanel(
             [
@@ -387,14 +539,6 @@ class WorkshopPage(Page):
                 FieldPanel("reference_prefix"),
             ],
             heading="Registration & payment",
-        ),
-        InlinePanel(
-            "packages",
-            heading="Packages",
-            label="Package",
-            min_num=0,
-            max_num=20,
-            help_text=PACKAGE_HELP,
         ),
         MultiFieldPanel(
             [

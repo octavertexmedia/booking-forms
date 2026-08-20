@@ -4,10 +4,10 @@
 {% block content %}
 {% if show_event_cards %}
 <section class="event-index">
-  <p class="script-line">Learn. Create. Indulge.</p>
+  <p class="script-line">{{ page.listing_tagline }}</p>
   <h1 class="flyer-title">
-    <span class="flyer-title__hero">Bookings</span>
-    <span class="flyer-title__sub">Cafe Orelo workshops</span>
+    <span class="flyer-title__hero">{{ page.listing_title }}</span>
+    <span class="flyer-title__sub">{{ page.listing_kicker }}</span>
   </h1>
   {% if page.intro %}
     <div class="lede">{{ page.intro|richtext }}</div>
@@ -26,7 +26,7 @@
           <span class="event-card__badge">Sold out</span>
           <a class="btn btn-primary" href="{{ event_url }}">View details</a>
         {% else %}
-          <a class="btn btn-primary" href="{{ event_url }}">Book your spot</a>
+          <a class="btn btn-primary" href="{{ event_url }}">{{ page.card_cta_label }}</a>
         {% endif %}
       </article>
     {% endfor %}
@@ -35,20 +35,28 @@
 {% elif workshop %}
 <section class="flyer-split">
   {% pageurl workshop as workshop_url %}
-  {% include "workshop/partials/flyer_copy.html" with workshop=workshop cta="book" book_url=workshop_url %}
+  <div class="flyer-home">
+    {% if page.intro %}
+      <div class="lede home-intro">{{ page.intro|richtext }}</div>
+    {% endif %}
+    {% include "workshop/partials/flyer_copy.html" with workshop=workshop cta="book" book_url=workshop_url %}
+  </div>
   <aside class="flyer-visual">
-    {% include "workshop/partials/flyer_portrait.html" with hero_image=workshop.hero_image chef_name=workshop.chef_display_name %}
+    {% include "workshop/partials/flyer_portrait.html" with hero_image=home_hero chef_name=workshop.chef_display_name %}
   </aside>
 </section>
 {% else %}
 <section class="status-stage">
   <article class="status-card">
-    <p class="script-line">Learn. Create. Indulge.</p>
+    <p class="script-line">{{ page.listing_tagline }}</p>
     <h1 class="flyer-title">
-      <span class="flyer-title__hero">Workshops</span>
-      <span class="flyer-title__sub">Coming soon</span>
+      <span class="flyer-title__hero">{{ page.listing_title }}</span>
+      <span class="flyer-title__sub">{{ page.listing_kicker }}</span>
     </h1>
-    <p class="lede">No workshop is published yet. Check back shortly.</p>
+    <p class="lede">{{ page.empty_lede }}</p>
+    {% if page.intro %}
+      <div class="lede">{{ page.intro|richtext }}</div>
+    {% endif %}
   </article>
 </section>
 {% endif %}
