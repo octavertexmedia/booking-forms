@@ -69,8 +69,8 @@ DEFAULT_TAKE_HOME = (
 )
 
 PACKAGE_HELP = (
-    "Use Add package to create a row. Fill name, seats, and price (₹). "
-    "Use Delete on a row to remove it. Drag or use the arrows to reorder. "
+    "Use Add package under the last row. Fill name, seats, and price (₹). "
+    "Move up / Move down reorders the list. Delete this package removes that row. "
     "Guests only see published packages. The Razorpay URL is optional — "
     "checkout creates a unique Payment Link."
 )
@@ -96,7 +96,7 @@ EVENT_HELP = (
     "<strong>Join the WhatsApp group</strong> (the invite you paste below). "
     "Paid guests also get WhatsApp + email with the same invite.</p>"
     "<p>Payment: use <strong>Add package</strong> below (name, seats, price). "
-    "Delete a row with the <strong>Delete</strong> button. Reorder with Up / Down / Reorder. "
+    "Delete a row with <strong>Delete this package</strong>. Reorder with <strong>Move up</strong> / <strong>Move down</strong>. "
     "On submit we always create a <strong>unique Razorpay Payment Link</strong> "
     "for that booking (reference <code>TIRAMISU-…</code>). "
     "The package’s static rzp.io URL is unused for checkout when API keys are set.</p>"

@@ -21,7 +21,7 @@ admin.site.index_title = "Workshop admin"
 @hooks.register("insert_global_admin_css")
 def global_admin_css():
     return format_html(
-        '<link rel="stylesheet" href="{}?v=20260820-pkg-labels">',
+        '<link rel="stylesheet" href="{}?v=20260821-pkg-actions">',
         static("workshop/css/admin.css"),
     )
 

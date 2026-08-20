@@ -212,89 +212,88 @@ input[type="button"]:disabled {
 }
 
 /*
-  InlinePanel Add / Delete / reorder. Wagtail’s default controls are
-  icon-only .button-secondary.white / .text-replace — green-on-green plus
-  font-size:0 hid “Add package” and the bin. Force labeled cream-on-green.
+  Package rows: labeled toolbar, not Wagtail’s icon-only header pills.
+  Do not use .button here — the global .button rule paints those green
+  and Wagtail then hides the text (empty pills).
 */
-#content .workshop-packages-panel,
-#content .workshop-packages-panel .w-panel,
-#content [data-inline-panel-child],
-#content .workshop-inline-add-wrap {
-  overflow: visible !important;
+#content .workshop-pkg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0 0 0.85rem;
+  border-bottom: 1px solid var(--ho-divider);
 }
 
-#content .workshop-packages-panel .button,
-#content .workshop-packages-panel .button-small,
-#content .workshop-packages-panel .button-secondary,
-#content .workshop-packages-panel .button.white,
-#content .workshop-inline-action,
-#content .workshop-inline-add,
-#content .workshop-inline-delete,
-#content .w-panel--nested .button,
-#content .w-panel--nested .button-small,
-#content .w-panel--nested .button-secondary,
-#content [data-inline-panel-child] .button,
-#content [id$="-ADD"],
-#content .chooser__choose-button,
-#content button[data-inline-panel-child-move-up],
-#content button[data-inline-panel-child-move-down],
-#content button[data-inline-panel-child-drag],
-#content [id$="-DELETE-button"],
-#content .button.button--icon.text-replace,
-#content .button.button--icon.text-replace.white {
-  display: inline-flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+#content .workshop-pkg-add-wrap {
+  margin: 0.75rem 0 0.25rem;
+}
+
+#content .workshop-pkg-btn,
+#content .workshop-pkg-btn:link,
+#content .workshop-pkg-btn:visited {
+  display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  width: auto !important;
-  min-width: 0 !important;
-  height: auto !important;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--ho-hero-mid);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ho-hero);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+#content .workshop-pkg-btn:hover,
+#content .workshop-pkg-btn:focus-visible {
+  background: var(--ho-tint);
+  color: var(--ho-hero);
+}
+
+#content .workshop-pkg-btn:disabled,
+#content .workshop-pkg-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f3f4f6;
+  color: var(--ho-text-muted);
+}
+
+#content .workshop-pkg-btn--delete {
+  margin-left: auto;
+  border-color: #9b1c1c;
+  color: #9b1c1c;
+}
+
+#content .workshop-pkg-btn--delete:hover,
+#content .workshop-pkg-btn--delete:focus-visible {
+  background: #fef2f2;
+  color: #7f1d1d;
+}
+
+#content .workshop-pkg-btn--add {
+  background: var(--ho-primary);
+  border-color: var(--ho-primary-dark);
+  color: #ffffff;
+}
+
+#content .workshop-pkg-btn--add:hover,
+#content .workshop-pkg-btn--add:focus-visible {
+  background: var(--ho-primary-active);
+  color: #ffffff;
+}
+
+#content .chooser__choose-button {
+  display: inline-flex !important;
+  align-items: center;
   padding: 0.4rem 0.8rem !important;
   font-size: 13px !important;
   font-weight: 650;
-  line-height: 1.2 !important;
-  background: var(--ho-primary) !important;
-  color: #f5f5dc !important;
-  border: 1px solid var(--ho-primary-dark) !important;
-  box-shadow: 0 0 0 1px #f5f5dc;
-}
-
-#content .workshop-inline-delete,
-#content [id$="-DELETE-button"] {
-  background: var(--ho-primary-dark) !important;
-}
-
-#content .workshop-packages-panel .button:hover,
-#content .workshop-inline-action:hover,
-#content [id$="-ADD"]:hover,
-#content .chooser__choose-button:hover,
-#content [id$="-DELETE-button"]:hover,
-#content .button.button--icon.text-replace:hover {
-  background: var(--ho-primary-active) !important;
   color: #ffffff !important;
-}
-
-#content .workshop-packages-panel .button svg,
-#content .workshop-packages-panel .button .icon,
-#content .workshop-inline-action svg,
-#content [data-inline-panel-child] .button svg,
-#content [id$="-ADD"] svg,
-#content .chooser__choose-button svg,
-#content [id$="-DELETE-button"] svg,
-#content .button.button--icon.text-replace svg {
-  display: inline-block !important;
-  width: 1rem;
-  height: 1rem;
-  color: #f5f5dc !important;
-  fill: currentColor !important;
-}
-
-#content .button.button--icon.text-replace[title]::after {
-  content: attr(title);
-  font-size: 13px;
-  font-weight: 650;
-  color: #f5f5dc;
 }
 
 /* Wagtail sidebar + Django admin nav: cream/white by default on forest */

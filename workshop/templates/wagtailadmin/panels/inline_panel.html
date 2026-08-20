@@ -31,11 +31,10 @@
     {% include "wagtailadmin/panels/inline_panel_child.html" with child=self.empty_child %}
 </template>
 
-<div class="w-mb-4 -w-ml-4 workshop-inline-add-wrap">
+<div class="workshop-pkg-add-wrap">
     {% block add_button %}
-        <button type="button" class="button button-small workshop-inline-action workshop-inline-add" id="id_{{ self.formset.prefix }}-ADD">
-            {% icon name=icon|default:"plus-inverse" %}
-            <span>{% blocktrans trimmed with label=self.label|lower %}Add {{ label }}{% endblocktrans %}</span>
+        <button type="button" class="workshop-pkg-btn workshop-pkg-btn--add" id="id_{{ self.formset.prefix }}-ADD">
+            {% blocktrans trimmed with label=self.label|lower %}Add {{ label }}{% endblocktrans %}
         </button>
     {% endblock %}
 </div>
