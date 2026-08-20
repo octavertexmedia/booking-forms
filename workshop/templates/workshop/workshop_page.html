@@ -20,7 +20,7 @@
       <p class="ticket-brand">Booking not configured</p>
     </div>
     <div class="perforation" aria-hidden="true"></div>
-    <p class="ticket-note">This event has no packages with a Razorpay payment link yet. Add at least one package with a Razorpay link on the Event page.</p>
+    <p class="ticket-note">This event is not ready for bookings yet. Add at least one package (name, seats, price) and set Razorpay API keys.</p>
   </aside>
   {% elif not has_bookable_package %}
   <aside class="ticket ticket--soldout">
@@ -109,7 +109,7 @@
     form.addEventListener("submit", () => {
       button.disabled = true;
       button.setAttribute("aria-busy", "true");
-      button.textContent = "Creating your link…";
+      button.textContent = "Taking you to payment…";
     });
   }
 </script>

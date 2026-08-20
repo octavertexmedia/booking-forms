@@ -1,36 +1,38 @@
 {% extends "workshop/base.html" %}
 
-{% block title %}{% if is_paid %}Booking confirmed{% else %}Payment pending{% endif %} · Cafe Orelo{% endblock %}
+{% block title %}{% if is_paid %}Booking confirmed{% else %}Pay to confirm{% endif %} · Cafe Orelo{% endblock %}
 {% block meta_description %}Cafe Orelo workshop booking status. Seats are confirmed only after payment.{% endblock %}
 {% block robots %}noindex, nofollow{% endblock %}
-{% block og_title %}{% if is_paid %}Booking confirmed{% else %}Payment pending{% endif %} · Cafe Orelo{% endblock %}
+{% block og_title %}{% if is_paid %}Booking confirmed{% else %}Pay to confirm{% endif %} · Cafe Orelo{% endblock %}
 {% block og_description %}Cafe Orelo workshop booking status. Seats are confirmed only after payment.{% endblock %}
-{% block twitter_title %}{% if is_paid %}Booking confirmed{% else %}Payment pending{% endif %} · Cafe Orelo{% endblock %}
+{% block twitter_title %}{% if is_paid %}Booking confirmed{% else %}Pay to confirm{% endif %} · Cafe Orelo{% endblock %}
 {% block twitter_description %}Cafe Orelo workshop booking status. Seats are confirmed only after payment.{% endblock %}
 
 {% block content %}
 <section class="status-stage">
-  <article class="status-card">
+  <article class="status-card" {% if registration %}data-poll-url="/payments/status/{{ registration.reference_id }}/poll/"{% endif %} data-should-poll="{% if should_poll %}1{% else %}0{% endif %}">
     {% if is_paid %}
       <p class="status-badge status-badge--paid">Confirmed / Paid</p>
       <p class="script-line">You’re in.</p>
-      <h1 class="flyer-title flyer-title--status">You’re on the guest list, {{ registration.full_name }}.</h1>
-      <p class="lede">
-        Payment of ₹{{ registration.amount|floatformat:0 }} is confirmed
-        (reference <span class="mono">{{ registration.reference_id }}</span>).
-        {% if workshop.group_invite_link %}
-          Join the workshop WhatsApp group yourself — we do not add anyone automatically.
-          The same invite is also sent to WhatsApp {{ registration.whatsapp }} and emailed to {{ registration.email }}.
-        {% else %}
-          Your payment is on file. The WhatsApp group invite will appear here once the kitchen pastes it on the Event page.
-        {% endif %}
-      </p>
+      <h1 class="flyer-title flyer-title--status">You’re on the guest list{% if registration %}, {{ registration.full_name }}{% endif %}.</h1>
       {% if workshop.group_invite_link %}
         <a class="btn btn-whatsapp btn-full" href="{{ workshop.group_invite_link }}">Join the WhatsApp group</a>
+        <p class="lede">
+          Payment of ₹{{ registration.amount|floatformat:0 }} is confirmed
+          (reference <span class="mono">{{ registration.reference_id }}</span>).
+          Join the workshop WhatsApp group yourself — we do not add anyone automatically.
+          The same invite is also sent to WhatsApp {{ registration.whatsapp }} and emailed to {{ registration.email }}.
+        </p>
+      {% else %}
+        <p class="lede">
+          Payment of ₹{{ registration.amount|floatformat:0 }} is confirmed
+          (reference <span class="mono">{{ registration.reference_id }}</span>).
+          The WhatsApp group invite will be sent on WhatsApp and email.
+        </p>
       {% endif %}
     {% else %}
       <p class="status-badge status-badge--pending">Pending payment</p>
-      <h1 class="flyer-title flyer-title--status">Pay to confirm your seat.</h1>
+      <h1 class="flyer-title flyer-title--status">{% if cancelled %}Pay again to confirm your seat.{% else %}Pay to confirm your seat.{% endif %}</h1>
       <p class="lede">
         Booking saved for {{ registration.full_name }}.
         Reference <span class="mono">{{ registration.reference_id }}</span>.
@@ -46,7 +48,7 @@
           (₹{{ price_per_seat|floatformat:0 }} × {{ registration.seats }} seat{{ registration.seats|pluralize }}).
         {% endif %}
       </p>
-      <p class="lede">The WhatsApp group invite appears here after payment is confirmed.</p>
+      <p class="lede poll-note" hidden>Checking payment…</p>
 
       {% if uses_static_payment_link and registration.payment_link %}
         <p class="lede">
@@ -56,27 +58,18 @@
         <ol class="seat-pay-list">
           {% for step in seat_pay_steps %}
             <li>
-              <a class="btn btn-primary btn-full" href="{{ registration.payment_link }}" target="_blank" rel="noopener">
+              <a class="btn btn-primary btn-full" href="{{ registration.payment_link }}">
                 Pay seat {{ step }} of {{ registration.seats }} — ₹{{ price_per_seat|floatformat:0 }}
               </a>
             </li>
           {% endfor %}
         </ol>
       {% elif registration.payment_link %}
-        <a class="btn btn-primary btn-full" href="{{ registration.payment_link }}" target="_blank" rel="noopener">Pay now — ₹{{ registration.amount|floatformat:0 }}</a>
-      {% endif %}
-
-      {% if reported_paid %}
-        <p class="confirm-note" role="status">We’ll confirm shortly. Reload this page after Cafe Orelo or Razorpay marks you paid — this button does not confirm payment by itself.</p>
-      {% else %}
-        <form class="reported-paid-form" method="post">
-          {% csrf_token %}
-          <input type="hidden" name="reported_paid" value="1">
-          <button class="btn btn-ghost" type="submit">I have paid</button>
-        </form>
+        <a class="btn btn-primary btn-full" href="{{ registration.payment_link }}">Pay now — ₹{{ registration.amount|floatformat:0 }}</a>
       {% endif %}
     {% endif %}
 
+    {% if registration and workshop %}
     <ul class="fact-row fact-row--status">
       <li>
         <div>
@@ -111,6 +104,38 @@
         </div>
       </li>
     </ul>
+    {% endif %}
   </article>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const card = document.querySelector("[data-poll-url]");
+  if (card && card.dataset.shouldPoll === "1") {
+    const url = card.dataset.pollUrl;
+    const note = card.querySelector(".poll-note");
+    if (note) note.hidden = false;
+    let ticks = 0;
+    const maxTicks = 14;
+    const timer = setInterval(async () => {
+      ticks += 1;
+      try {
+        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        const data = await res.json();
+        if (data && data.paid) {
+          clearInterval(timer);
+          window.location.reload();
+          return;
+        }
+      } catch (err) {
+        /* keep polling */
+      }
+      if (ticks >= maxTicks) {
+        clearInterval(timer);
+        if (note) note.hidden = true;
+      }
+    }, 1500);
+  }
+</script>
 {% endblock %}

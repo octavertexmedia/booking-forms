@@ -106,7 +106,9 @@ class RegistrationForm(forms.Form):
         if remaining <= 0:
             raise forms.ValidationError("This event is sold out.")
         live = self.workshop.packages.filter(pk=package.pk).first()
-        if live is None or not live.has_payment_link():
+        if live is None or not live.is_usable():
+            raise forms.ValidationError("Choose an available package.")
+        if not self.workshop._api_checkout_available() and not live.has_payment_link():
             raise forms.ValidationError("Choose an available package.")
         if live.seats > remaining:
             raise forms.ValidationError(

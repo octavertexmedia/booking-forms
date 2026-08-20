@@ -211,6 +211,56 @@ input[type="button"]:disabled {
   color: #f5f5dc;
 }
 
+/*
+  InlinePanel Add / Delete / reorder. Wagtail’s .button-secondary paints
+  --w-color-primary text; our .button background is the same green, so
+  “Add package” and the bin/grip icons vanished (green-on-green).
+*/
+#content .w-panel--nested .button,
+#content .w-panel--nested .button-small,
+#content .w-panel--nested .button-secondary,
+#content [data-inline-panel-child] .button,
+#content [id$="-ADD"],
+#content .chooser__choose-button,
+#content button[data-inline-panel-child-move-up],
+#content button[data-inline-panel-child-move-down],
+#content button[data-inline-panel-child-drag],
+#content [id$="-DELETE-button"] {
+  background: var(--ho-primary) !important;
+  color: #f5f5dc !important;
+  border-color: var(--ho-primary-dark);
+}
+
+#content .w-panel--nested .button:hover,
+#content [id$="-ADD"]:hover,
+#content .chooser__choose-button:hover,
+#content [id$="-DELETE-button"]:hover {
+  background: var(--ho-primary-active) !important;
+  color: #ffffff !important;
+}
+
+#content .w-panel--nested .button svg,
+#content .w-panel--nested .button .icon,
+#content [data-inline-panel-child] .button svg,
+#content [id$="-ADD"] svg,
+#content .chooser__choose-button svg,
+#content [id$="-DELETE-button"] svg {
+  color: #f5f5dc !important;
+  fill: currentColor !important;
+}
+
+#content .button.button--icon.text-replace {
+  width: 2.1rem;
+  height: 2.1rem;
+  min-width: 2.1rem;
+  padding: 0;
+  font-size: 0;
+  line-height: 0;
+  background: var(--ho-primary-dark) !important;
+  color: #f5f5dc !important;
+  box-shadow: 0 0 0 1px #f5f5dc;
+}
+
 /* Wagtail sidebar + Django admin nav: cream/white by default on forest */
 #wagtail-sidebar,
 #wagtail-sidebar a,

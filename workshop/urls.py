@@ -6,6 +6,11 @@ urlpatterns = [
     path("robots.txt", views.robots_txt, name="robots_txt"),
     path("sitemap.xml", views.sitemap_xml, name="sitemap_xml"),
     path("payments/callback/", views.payment_callback, name="payment_callback"),
+    path(
+        "payments/status/<str:reference_id>/poll/",
+        views.payment_status_poll,
+        name="payment_status_poll",
+    ),
     path("payments/status/<str:reference_id>/", views.payment_status, name="payment_status"),
     path("payments/mock/<str:reference_id>/", views.mock_pay, name="mock_pay"),
     path("webhooks/razorpay/", views.razorpay_webhook, name="razorpay_webhook"),

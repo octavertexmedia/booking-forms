@@ -1,7 +1,7 @@
 # Cafe Orelo workshop portal
 ok
 
-Wagtail CMS registration portal for Cafe Orelo workshops. Guests register on the site, pay (shared per-seat rzp.io link or a unique Razorpay Payment Link), and see the WhatsApp group invite on the confirmation page only after the row is **PAID**.
+Wagtail CMS registration portal for Cafe Orelo workshops. Guests register on the site, go **straight to Razorpay** (package rzp.io link or a unique Payment Link), and see the WhatsApp group invite only after the row is **PAID**.
 
 Stack: **Django / Wagtail** (serverless-ready), **Neon Postgres**, **AWS S3** for media and static files, **AWS Lambda** via Mangum.
 
@@ -88,9 +88,9 @@ Workshop hero images uploaded in Wagtail go to `s3://$BUCKET/media/`.
 3. Subscribe to **`payment_link.paid`**, **`payment.captured`**, and **`payment.authorized`**.
 4. Put the bookings webhook secret in `RAZORPAY_WEBHOOK_SECRET_TIRAMISU` (or `RAZORPAY_WEBHOOK_SECRET`). This is not the API key secret and not the shop webhook at `/api/shop/payments/razorpay/webhook/`.
 5. Set `RAZORPAY_MOCK=false` in production.
-6. Unique API links mark PAID from `payment_link.paid` (our booking reference is on the link). A shared rzp.io URL such as `https://rzp.io/rzp/CW6o0Mec` often has no reference — we then match **exactly one** PENDING guest by email or WhatsApp last-10 digits. If that fails, staff uses **Mark as paid** (Wagtail Registrations or Django admin). That sends the same WhatsApp + email invites.
+6. Unique API links mark PAID from the `/payments/callback/` return (our booking reference is on the link) and from `payment_link.paid`. A shared rzp.io URL such as `https://rzp.io/rzp/CW6o0Mec` often has no reference — set that Payment Link’s **redirect / callback** to `https://bookings.healthyome.in/payments/callback/` in the Razorpay Dashboard. We then match **exactly one** PENDING guest by email or WhatsApp last-10 digits (or the same-browser session from the form). If that fails, the guest sees “We’re confirming your payment” (no invite) and staff uses **Mark as paid** (Wagtail Registrations or Django admin). That sends the same WhatsApp + email invites.
 
-The guest status page is `/payments/status/<reference>/`. After PAID it shows **Join the WhatsApp group** using the invite URL pasted on the Event page. A guest “I have paid” click does **not** mark them paid.
+After the form, guests are sent **straight to Razorpay**. `/payments/status/<reference>/` is the return page: after PAID it shows **Join the WhatsApp group** using the invite URL pasted on the Event page. PENDING and confirming pages never show the invite. A guest “I have paid” click does **not** mark them paid.
 
 ### WhatsApp (VertexCRM / AI Sensy)
 

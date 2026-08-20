@@ -210,6 +210,40 @@ def match_registration(payload: dict) -> Registration | None:
     return _unique(phone_hits, "whatsapp")
 
 
+def match_from_callback(
+    *,
+    reference_id: str = "",
+    payment_link_id: str = "",
+    payment_id: str = "",
+    email: str = "",
+    contact: str = "",
+    notes: dict | None = None,
+) -> Registration | None:
+    """Resolve a Payment Link return (query/form fields, not a webhook envelope)."""
+    extra = notes if isinstance(notes, dict) else {}
+    payload = {
+        "payload": {
+            "payment_link": {
+                "entity": {
+                    "id": payment_link_id,
+                    "reference_id": reference_id,
+                    "customer": {"email": email, "contact": contact},
+                    "notes": extra,
+                }
+            },
+            "payment": {
+                "entity": {
+                    "id": payment_id,
+                    "email": email,
+                    "contact": contact,
+                    "notes": extra,
+                }
+            },
+        }
+    }
+    return match_registration(payload)
+
+
 def deliver_invites(registration: Registration) -> None:
     """WhatsApp + email with this event's group invite. Failures must not fail payment."""
     registration.refresh_from_db()

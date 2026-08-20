@@ -967,13 +967,14 @@ a {
   margin-top: 0.35rem;
 }
 
-.confirm-note {
+.confirm-note,
+.poll-note {
   margin-top: 1rem;
   padding: 0.85rem 1rem;
   background: rgba(162, 212, 0, 0.1);
   border: 1px solid rgba(162, 212, 0, 0.28);
   border-radius: 0.75rem;
-  color: rgba(255, 255, 255, 0.88);
+  color: rgba(255, 255, 220, 0.88);
 }
 
 .seat-pay-list {

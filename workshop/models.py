@@ -65,15 +65,25 @@ DEFAULT_TAKE_HOME = (
     "A fun baking experience with fellow dessert lovers"
 )
 
+PACKAGE_HELP = (
+    "Add or delete packages here. Guests see published packages. "
+    "Each row needs a name, seats, and price (₹). "
+    "The Razorpay URL is optional — checkout creates a unique Payment Link."
+)
+
 EVENT_HELP = (
     "<p><strong>How this event works</strong></p>"
-    "<p>Publish this page → share the URL → guests pay → paid guests get WhatsApp + email "
-    "with the group invite you paste below.</p>"
-    "<p>Payment: add <strong>Packages</strong> below. Each package needs its own Razorpay "
-    "Payment Link. Guests pay that link once for the package. Add at least one package with "
-    "a Razorpay link — packages without a link stay hidden on the public form.</p>"
-    "<p>The single <strong>fallback Razorpay payment link</strong> is used only when this event "
-    "has no packages.</p>"
+    "<p>Publish this page → share the URL → guests pay → they immediately see "
+    "<strong>Join the WhatsApp group</strong> (the invite you paste below). "
+    "Paid guests also get WhatsApp + email with the same invite.</p>"
+    "<p>Payment: use <strong>Add package</strong> below (name, seats, price). "
+    "Delete a row with the bin icon. Reorder with the handles. "
+    "On submit we always create a <strong>unique Razorpay Payment Link</strong> "
+    "for that booking (reference <code>TIRAMISU-…</code>). "
+    "The package’s static rzp.io URL is unused for checkout when API keys are set.</p>"
+    "<p>After pay, Razorpay returns to "
+    "<code>https://bookings.healthyome.in/payments/callback/?ref=&lt;REFERENCE&gt;</code>. "
+    "That request marks the row PAID. The webhook is backup.</p>"
     "<p><strong>Set Razorpay webhook to "
     "<code>https://bookings.healthyome.in/webhooks/razorpay/</code> "
     "for <code>payment.captured</code> and <code>payment_link.paid</code></strong> "
@@ -274,8 +284,8 @@ class WorkshopPage(Page):
         blank=True,
         verbose_name="Fallback Razorpay payment link (per seat)",
         help_text=(
-            "Used only if this event has no packages. Shared rzp.io URL priced for one seat; "
-            "multi-seat guests pay that same link once per seat. Prefer adding Packages instead."
+            "Last-resort only if Razorpay API keys are missing and this event has no packages. "
+            "When keys are set, checkout always creates a unique Payment Link."
         ),
     )
     payment_description = models.CharField(
@@ -378,20 +388,13 @@ class WorkshopPage(Page):
             ],
             heading="Registration & payment",
         ),
-        MultiFieldPanel(
-            [
-                HelpPanel(
-                    content=(
-                        "<p>Each package needs its own Razorpay Payment Link. "
-                        "Guests pay that link once for the package.</p>"
-                        "<p>Add at least one package with a Razorpay link. "
-                        "Packages without a link stay hidden on the public form.</p>"
-                    ),
-                    heading="How packages work",
-                ),
-                InlinePanel("packages", label="Package"),
-            ],
+        InlinePanel(
+            "packages",
             heading="Packages",
+            label="Package",
+            min_num=0,
+            max_num=20,
+            help_text=PACKAGE_HELP,
         ),
         MultiFieldPanel(
             [
@@ -458,15 +461,27 @@ class WorkshopPage(Page):
         )
         return context
 
+    def _api_checkout_available(self) -> bool:
+        from django.conf import settings
+
+        from .razorpay_client import has_api_keys
+
+        return has_api_keys() or bool(settings.RAZORPAY_MOCK)
+
     def bookable_packages(self) -> list["WorkshopPackage"]:
         remaining = self.seats_remaining()
+        api_ok = self._api_checkout_available()
         return [
             package
             for package in self.packages.all()
-            if (package.payment_link or "").strip() and package.seats <= remaining
+            if package.is_usable()
+            and package.seats <= remaining
+            and (api_ok or package.has_payment_link())
         ]
 
     def booking_is_configured(self) -> bool:
+        if self._api_checkout_available():
+            return True
         if self.packages.exists():
             return any((package.payment_link or "").strip() for package in self.packages.all())
         return bool((self.payment_link_url or "").strip())
@@ -477,11 +492,7 @@ class WorkshopPage(Page):
         return self.booking_is_configured() and self.seats_remaining() > 0
 
     def starting_price(self) -> Decimal:
-        prices = [
-            package.price
-            for package in self.packages.all()
-            if (package.payment_link or "").strip()
-        ]
+        prices = [package.price for package in self.packages.all() if package.is_usable()]
         if prices:
             return min(prices)
         return self.price_per_seat
@@ -619,8 +630,8 @@ class WorkshopPackage(Orderable):
         blank=True,
         verbose_name="Razorpay payment link",
         help_text=(
-            "The rzp.io or Razorpay Payment Link URL for this package. "
-            "Leave empty to hide this option on the public form."
+            "Unused for checkout when Razorpay API keys are set — we create a unique "
+            "Payment Link per booking. Last-resort fallback only if keys are missing."
         ),
     )
     note = models.CharField(
@@ -654,6 +665,10 @@ class WorkshopPackage(Orderable):
 
     def has_payment_link(self) -> bool:
         return bool((self.payment_link or "").strip())
+
+    def is_usable(self) -> bool:
+        """Public form needs a real seat count and a price of at least ₹1."""
+        return int(self.seats or 0) >= 1 and self.price is not None and self.price >= 1
 
 
 class RegistrationStatus(models.TextChoices):
