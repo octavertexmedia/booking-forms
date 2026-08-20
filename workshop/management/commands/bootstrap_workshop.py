@@ -80,6 +80,16 @@ class Command(BaseCommand):
                 intro=FLYER_INTRO,
                 seo_title=HOME_SEO_TITLE,
                 search_description=HOME_SEARCH_DESCRIPTION,
+                tagline="Learn. Create. Indulge.",
+                hero_title="Tiramisu",
+                hero_kicker="Making Workshop",
+                gold_banner="Eggless tiramisu making",
+                workshop_date=FLYER_DATE,
+                start_time=FLYER_START,
+                end_time=FLYER_END,
+                venue=FLYER_VENUE,
+                chef_name=FLYER_CHEF,
+                price_per_seat=FLYER_PRICE,
             )
             root.add_child(instance=home)
             home.save_revision().publish()

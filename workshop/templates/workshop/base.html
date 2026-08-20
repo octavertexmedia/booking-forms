@@ -1,4 +1,4 @@
-{% load static %}
+{% load static wagtailimages_tags %}
 <!DOCTYPE html>
 <html lang="en-IN">
 <head>
@@ -35,7 +35,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Oswald:wght@500;600;700&family=Outfit:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'workshop/css/workshop.css' %}?v=20260820-home-cms">
+  <link rel="stylesheet" href="{% static 'workshop/css/workshop.css' %}?v=20260821-home-owns-flyer">
   <script type="application/ld+json">{{ website_json_ld|safe }}</script>
   {% block json_ld %}
   {% if event_json_ld %}
@@ -48,15 +48,20 @@
   <div class="atelier">
     <header class="site-header">
       <a class="wordmark" href="/">
-        <img class="wordmark-logo" src="{% static 'workshop/images/cafe-orelo-logo.png' %}" alt="Cafe Orelo" width="196" height="84">
+        {% if site_logo %}
+          {% image site_logo original as chrome_logo %}
+          <img class="wordmark-logo" src="{{ chrome_logo.url }}" alt="{{ site_logo.title|default:'Cafe Orelo' }}" width="{{ chrome_logo.width }}" height="{{ chrome_logo.height }}">
+        {% else %}
+          <img class="wordmark-logo" src="{% static 'workshop/images/cafe-orelo-logo.png' %}" alt="Cafe Orelo" width="196" height="84">
+        {% endif %}
       </a>
-      <p class="brand-tagline"><span></span>good food, good mood.<span></span></p>
+      <p class="brand-tagline"><span></span>{{ brand_tagline|default:"good food, good mood." }}<span></span></p>
     </header>
     <main id="main">
       {% block content %}{% endblock %}
     </main>
     <footer class="site-footer">
-      <p>Cafe Orelo · seats confirmed only after payment</p>
+      <p>{{ footer_line|default:"Cafe Orelo · seats confirmed only after payment" }}</p>
       {% include "workshop/partials/octavertex_credit.html" %}
     </footer>
   </div>

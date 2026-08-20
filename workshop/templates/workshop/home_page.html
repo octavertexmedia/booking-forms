@@ -39,10 +39,10 @@
     {% if page.intro %}
       <div class="lede home-intro">{{ page.intro|richtext }}</div>
     {% endif %}
-    {% include "workshop/partials/flyer_copy.html" with workshop=workshop cta="book" book_url=workshop_url %}
+    {% include "workshop/partials/flyer_copy.html" with workshop=flyer cta="book" book_url=workshop_url %}
   </div>
   <aside class="flyer-visual">
-    {% include "workshop/partials/flyer_portrait.html" with hero_image=home_hero chef_name=workshop.chef_display_name %}
+    {% include "workshop/partials/flyer_portrait.html" with hero_image=home_hero chef_name=flyer.chef_display_name chef_byline=page.chef_byline chef_role=page.chef_role %}
   </aside>
 </section>
 {% else %}

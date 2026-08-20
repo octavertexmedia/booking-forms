@@ -15,3 +15,20 @@ def public_seo(request):
         ),
         "website_json_ld": seo.json_ld_script(seo.graph_payload(*seo.website_json_ld())),
     }
+
+
+def site_chrome(request):
+    """Header / footer copy from Home — skipped on admin so we don't extra-query."""
+    path = getattr(request, "path", "") or ""
+    if path.startswith("/admin/") or path.startswith("/django-admin/"):
+        return {}
+    from workshop.models import HomePage
+
+    home = HomePage.objects.live().public().first()
+    if not home:
+        return {}
+    return {
+        "site_logo": home.logo,
+        "brand_tagline": home.brand_tagline,
+        "footer_line": home.footer_line,
+    }

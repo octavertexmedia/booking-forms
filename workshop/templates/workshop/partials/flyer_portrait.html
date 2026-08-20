@@ -9,9 +9,9 @@
       height="{{ hero.height }}"
     >
     <figcaption class="chef-chip">
-      <span class="chef-chip__by">By</span>
+      <span class="chef-chip__by">{{ chef_byline|default:"By" }}</span>
       <span class="chef-chip__name">{{ chef_name }}</span>
-      <span class="chef-chip__role">Pastry Chef</span>
+      <span class="chef-chip__role">{{ chef_role|default:"Pastry Chef" }}</span>
     </figcaption>
   {% else %}
     <img

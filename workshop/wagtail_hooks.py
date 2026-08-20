@@ -1,14 +1,16 @@
 from django.contrib import admin
+from django.dispatch import receiver
 from django.templatetags.static import static
 from django.urls import reverse
 from django.utils.html import format_html
 from wagtail import hooks
 from wagtail.admin.views.home import UpgradeNotificationPanel
 from wagtail.admin.widgets.button import ListingButton
+from wagtail.signals import page_published
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
-from .models import Registration, RegistrationStatus
+from .models import HomePage, Registration, RegistrationStatus
 from .payments import confirm_paid
 
 admin.site.site_header = "Cafe Orelo Booking Forms"
@@ -27,6 +29,11 @@ def global_admin_css():
 @hooks.register("construct_homepage_panels")
 def hide_wagtail_upgrade_panel(request, panels):
     panels[:] = [panel for panel in panels if not isinstance(panel, UpgradeNotificationPanel)]
+
+
+@receiver(page_published, sender=HomePage)
+def sync_home_flyer_to_featured_event(sender, instance, **kwargs):
+    instance.sync_featured_event()
 
 
 class RegistrationViewSet(SnippetViewSet):

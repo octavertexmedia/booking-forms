@@ -81,6 +81,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "workshop.context_processors.public_seo",
+                "workshop.context_processors.site_chrome",
             ],
         },
     },

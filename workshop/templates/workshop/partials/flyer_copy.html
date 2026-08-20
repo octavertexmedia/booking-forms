@@ -23,14 +23,14 @@
     <li>
       {% include "workshop/partials/line_icon.html" with name="calendar" %}
       <div>
-        <span class="fact-label">Date</span>
+        <span class="fact-label">{{ workshop.date_label|default:"Date" }}</span>
         <strong>{{ workshop.format_flyer_date }}</strong>
       </div>
     </li>
     <li>
       {% include "workshop/partials/line_icon.html" with name="clock" %}
       <div>
-        <span class="fact-label">Time</span>
+        <span class="fact-label">{{ workshop.time_label|default:"Time" }}</span>
         <strong>{{ workshop.format_flyer_time }}</strong>
       </div>
     </li>
@@ -39,7 +39,7 @@
         {% include "workshop/partials/line_icon.html" with name="pin" %}
       </span>
       <div>
-        <span class="fact-label">Location</span>
+        <span class="fact-label">{{ workshop.location_label|default:"Location" }}</span>
         <strong>{{ workshop.venue }}</strong>
       </div>
     </li>
@@ -69,7 +69,7 @@
       <span class="icon-orb icon-orb--gold">
         {% include "workshop/partials/line_icon.html" with name="ribbon" %}
       </span>
-      {% if workshop.is_sold_out %}Sold out{% else %}{{ workshop.limited_seats_line }}{% endif %}
+      {% if workshop.is_sold_out %}{{ workshop.sold_out_line|default:"Sold out" }}{% else %}{{ workshop.limited_seats_line }}{% endif %}
     </p>
     {% if cta == "book" and not workshop.is_sold_out %}
       <a class="btn btn-primary" href="{{ book_url }}">{{ workshop.cta_label|default:"Book your spot now" }}</a>

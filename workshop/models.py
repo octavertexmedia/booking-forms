@@ -1,3 +1,4 @@
+from datetime import date, time
 from decimal import Decimal
 import re
 
@@ -75,22 +76,18 @@ PACKAGE_HELP = (
 )
 
 HOME_HELP = (
-    "<p><strong>Home vs Event — read this first</strong></p>"
-    "<p>This is the landing at <code>/</code>. It does <em>not</em> own the "
-    "tiramisu flyer you see when one workshop is live.</p>"
-    "<p>When <strong>one Event</strong> is published, the public homepage "
-    "shows that Event’s flyer: title, tagline, kicker, gold banner, date, "
-    "time, venue, take-homes, price bar, CTA, enquiry WhatsApp, and the "
-    "Event photo. Edit those on the Event page (Pages → that Event, usually "
-    "<a href=\"/admin/pages/4/edit/\">Tiramisu Making Workshop</a>), then "
-    "publish.</p>"
-    "<p>When <strong>two or more Events</strong> are live, Home shows a card "
-    "list. The listing headings and welcome line below are what guests see "
-    "then.</p>"
-    "<p><strong>Fields on this Home page that do render:</strong> welcome "
-    "line (whenever it is filled), Home hero image (replaces the Event photo "
-    "on this URL only), listing tagline / title / kicker, empty-state line, "
-    "and the card CTA label.</p>"
+    "<p><strong>This page is the public homepage</strong> "
+    "(<code>https://bookings.healthyome.in/</code>).</p>"
+    "<p>Every line guests see on that URL is edited here: header tagline, "
+    "logo, flyer title, gold banner, date / time / venue, take-homes, price, "
+    "Book button, WhatsApp, chef photo, and footer. Change a field, then "
+    "<strong>Publish</strong>.</p>"
+    "<p>The green <strong>Book</strong> button still opens the first published "
+    "Event (packages and the booking form live on that Event). Publishing "
+    "Home also copies flyer date, time, venue, price, and copy onto that "
+    "Event when it is the only one live, so the booking page stays in sync.</p>"
+    "<p>When two or more Events are live, guests see cards instead of the "
+    "single flyer. Use the listing headings at the bottom for that view.</p>"
 )
 
 EVENT_HELP = (
@@ -116,9 +113,115 @@ EVENT_HELP = (
     "<p>To run another date or dish: in <strong>Pages</strong>, open Cafe Orelo and "
     "<strong>Add Event</strong>, or copy this page and change the date, packages, and invite links. "
     "The public booking URL is this page’s slug (for example <code>/tiramisu-workshop/</code>).</p>"
-    "<p>The public homepage flyer (when this is the only live Event) uses the "
-    "Flyer copy + Event fields on <em>this</em> page — not the Home page.</p>"
+    "<p>The public homepage flyer is edited on <strong>Home</strong> "
+    "(<a href=\"/admin/pages/3/edit/\">Cafe Orelo</a>), not here. This Event "
+    "owns the booking form, packages, WhatsApp group invite, and emails. "
+    "Publishing Home copies flyer date / time / price onto this Event when "
+    "it is the only live Event.</p>"
 )
+
+HOME_EVENT_SYNC_FIELDS = (
+    "tagline",
+    "hero_title",
+    "hero_kicker",
+    "gold_banner",
+    "take_home_intro",
+    "take_home_list",
+    "limited_seats_line",
+    "price_bar_label",
+    "cta_label",
+    "enquiry_whatsapp",
+    "chef_name",
+    "workshop_date",
+    "start_time",
+    "end_time",
+    "venue",
+    "price_per_seat",
+)
+
+
+class FlyerDisplayMixin:
+    """Date / take-home / WhatsApp helpers shared by Home and Event flyers."""
+
+    date_label = "Date"
+    time_label = "Time"
+    location_label = "Location"
+    sold_out_line = "Sold out"
+    chef_byline = "By"
+    chef_role = "Pastry Chef"
+
+    def take_home_items(self) -> list[str]:
+        return [line.strip() for line in (self.take_home_list or "").splitlines() if line.strip()]
+
+    def take_home_display(self) -> list[dict[str, str]]:
+        items = []
+        for index, text in enumerate(self.take_home_items()):
+            items.append(
+                {
+                    "text": text,
+                    "icon": TAKE_HOME_ICONS[index % len(TAKE_HOME_ICONS)],
+                    "orb": TAKE_HOME_ORBS[index % len(TAKE_HOME_ORBS)],
+                }
+            )
+        return items
+
+    def enquiry_whatsapp_digits(self) -> str:
+        digits = re.sub(r"\D", "", self.enquiry_whatsapp or "")
+        if len(digits) >= 10:
+            return digits[-10:]
+        return ""
+
+    def enquiry_whatsapp_url(self) -> str:
+        digits = self.enquiry_whatsapp_digits()
+        return f"https://wa.me/91{digits}" if digits else ""
+
+    def enquiry_whatsapp_display(self) -> str:
+        return self.enquiry_whatsapp_digits()
+
+    def format_date(self) -> str:
+        return self.workshop_date.strftime("%-d %B %Y")
+
+    def format_time_range(self) -> str:
+        start = self.start_time.strftime("%-I:%M %p")
+        end = self.end_time.strftime("%-I:%M %p")
+        return f"{start} – {end}"
+
+    def format_flyer_date(self) -> str:
+        """All-caps flyer line, e.g. SUNDAY 23RD AUGUST 2026."""
+        day = self.workshop_date.day
+        if 11 <= day <= 13:
+            suffix = "th"
+        else:
+            suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+        weekday = self.workshop_date.strftime("%A").upper()
+        month = self.workshop_date.strftime("%B").upper()
+        return f"{weekday} {day}{suffix.upper()} {month} {self.workshop_date.year}"
+
+    def format_flyer_time(self) -> str:
+        """Zero-padded flyer line, e.g. 03:00 PM TO 05:00 PM."""
+        start = self.start_time.strftime("%I:%M %p")
+        end = self.end_time.strftime("%I:%M %p")
+        return f"{start} TO {end}"
+
+    def chef_display_name(self) -> str:
+        name = (self.chef_name or "").strip()
+        if name.lower().startswith("chef "):
+            return name[5:].strip()
+        return name or "Aanchal Wadhwa"
+
+
+class FlyerFacade:
+    """Lets the shared flyer template read Home copy plus Event sold-out state."""
+
+    def __init__(self, home, event=None):
+        self._home = home
+        self._event = event
+
+    def __getattr__(self, name):
+        return getattr(self._home, name)
+
+    def is_sold_out(self) -> bool:
+        return bool(self._event and self._event.is_sold_out())
 
 
 class HomeGuidePanel(HelpPanel):
@@ -150,7 +253,7 @@ class HomeGuidePanel(HelpPanel):
             for event in events:
                 note = ""
                 if featured_id and event.pk == featured_id:
-                    note = " — public homepage flyer comes from this Event"
+                    note = " — Book button on / opens this Event"
                 state = "published" if event.live else "draft"
                 rows.append(
                     (
@@ -171,16 +274,146 @@ class HomeGuidePanel(HelpPanel):
             )
 
 
-class HomePage(Page):
-    """Cafe landing page that lists live events."""
+class HomePage(FlyerDisplayMixin, Page):
+    """Cafe landing page. Owns every line guests see on /."""
 
+    brand_tagline = models.CharField(
+        max_length=80,
+        default="good food, good mood.",
+        verbose_name="Header tagline",
+        help_text="Under the Cafe Orelo logo on every public page.",
+    )
+    logo = models.ForeignKey(
+        get_image_model_string(),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name="Header logo",
+        help_text="Optional. Leave blank to keep the Cafe Orelo wordmark.",
+    )
+    footer_line = models.CharField(
+        max_length=160,
+        default="Cafe Orelo · seats confirmed only after payment",
+        verbose_name="Footer line",
+        help_text="Top line of the public footer (above the Octavertex credit).",
+    )
+    tagline = models.CharField(
+        max_length=80,
+        default="Learn. Create. Indulge.",
+        verbose_name="Script line at the top",
+    )
+    hero_title = models.CharField(
+        max_length=40,
+        default="Tiramisu",
+        verbose_name="Big title on the flyer",
+    )
+    hero_kicker = models.CharField(
+        max_length=80,
+        default="Making Workshop",
+        verbose_name="Small title under the big word",
+    )
+    gold_banner = models.CharField(
+        max_length=80,
+        default="Eggless tiramisu making",
+        verbose_name="Gold banner line",
+    )
+    workshop_date = models.DateField(
+        default=date(2026, 8, 23),
+        verbose_name="Date on the flyer",
+    )
+    start_time = models.TimeField(
+        default=time(15, 0),
+        verbose_name="Start time",
+    )
+    end_time = models.TimeField(
+        default=time(17, 0),
+        verbose_name="End time",
+    )
+    venue = models.CharField(
+        max_length=120,
+        default="Cafe Orelo",
+        verbose_name="Location",
+    )
+    date_label = models.CharField(
+        max_length=24,
+        default="Date",
+        verbose_name="Date label",
+    )
+    time_label = models.CharField(
+        max_length=24,
+        default="Time",
+        verbose_name="Time label",
+    )
+    location_label = models.CharField(
+        max_length=24,
+        default="Location",
+        verbose_name="Location label",
+    )
+    take_home_intro = models.CharField(
+        max_length=80,
+        default="What you will take home?",
+        verbose_name="Take-home heading",
+    )
+    take_home_list = models.TextField(
+        default=DEFAULT_TAKE_HOME,
+        verbose_name="What guests take home",
+        help_text="One item per line. These show on the public homepage flyer.",
+    )
+    price_bar_label = models.CharField(
+        max_length=80,
+        default="Registration charges",
+        verbose_name="Price bar label",
+    )
+    price_per_seat = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal("1499.00"),
+        verbose_name="Price on the flyer (₹)",
+        help_text="Magenta bar on the homepage. Publishing Home copies this onto the live Event.",
+    )
+    limited_seats_line = models.CharField(
+        max_length=120,
+        default="Limited seats. Book your spot now!",
+        verbose_name="Limited seats line",
+    )
+    sold_out_line = models.CharField(
+        max_length=80,
+        default="Sold out",
+        verbose_name="Sold-out line",
+        help_text="Replaces the limited-seats line when the Event has no seats left.",
+    )
+    cta_label = models.CharField(
+        max_length=40,
+        default="Book your spot now",
+        verbose_name="Book button label",
+    )
+    enquiry_whatsapp = models.CharField(
+        max_length=16,
+        default=DEFAULT_ENQUIRY_WHATSAPP,
+        blank=True,
+        verbose_name="Enquiry WhatsApp number",
+        help_text="10-digit Indian number on the flyer. Leave blank to hide the link.",
+    )
+    chef_name = models.CharField(
+        max_length=120,
+        default="Aanchal Wadhwa",
+        verbose_name="Chef name",
+    )
+    chef_byline = models.CharField(
+        max_length=24,
+        default="By",
+        verbose_name="Chef chip — small word",
+    )
+    chef_role = models.CharField(
+        max_length=40,
+        default="Pastry Chef",
+        verbose_name="Chef chip — role",
+    )
     intro = RichTextField(
         blank=True,
         verbose_name="Welcome line",
-        help_text=(
-            "Shown on the public homepage whenever this is filled — above the "
-            "single-event flyer, or above the card list when several events are live."
-        ),
+        help_text="Optional extra copy above the flyer or the card list. Leave blank to hide it.",
     )
     hero_image = models.ForeignKey(
         get_image_model_string(),
@@ -190,21 +423,21 @@ class HomePage(Page):
         related_name="+",
         verbose_name="Home hero image",
         help_text=(
-            "Optional. Replaces the Event photo on the public homepage only. "
-            "Leave blank to use the Event’s hero image (or the default chef crop)."
+            "Photo on the right of the homepage flyer. Leave blank to use the Event "
+            "photo, or the default chef crop."
         ),
     )
     listing_tagline = models.CharField(
         max_length=80,
         default="Learn. Create. Indulge.",
         verbose_name="Listing tagline",
-        help_text="Script line above the heading when several events are listed, or none are live.",
+        help_text="Script line when several events are listed, or none are live.",
     )
     listing_title = models.CharField(
         max_length=40,
         default="Bookings",
         verbose_name="Listing title",
-        help_text="Big word on the multi-event homepage. Unused when one Event flyer is showing.",
+        help_text="Big word on the multi-event homepage. Unused when the single flyer is showing.",
     )
     listing_kicker = models.CharField(
         max_length=80,
@@ -229,10 +462,45 @@ class HomePage(Page):
         HomeGuidePanel(heading="What this page controls"),
         MultiFieldPanel(
             [
-                FieldPanel("intro"),
-                FieldPanel("hero_image"),
+                FieldPanel("logo"),
+                FieldPanel("brand_tagline"),
+                FieldPanel("footer_line"),
             ],
-            heading="Home content (renders on /)",
+            heading="Header & footer (every public page)",
+        ),
+        MultiFieldPanel(
+            [
+                FieldPanel("tagline"),
+                FieldPanel("hero_title"),
+                FieldPanel("hero_kicker"),
+                FieldPanel("gold_banner"),
+                FieldPanel("date_label"),
+                FieldPanel("workshop_date"),
+                FieldPanel("time_label"),
+                FieldPanel("start_time"),
+                FieldPanel("end_time"),
+                FieldPanel("location_label"),
+                FieldPanel("venue"),
+                FieldPanel("take_home_intro"),
+                FieldPanel("take_home_list"),
+                FieldPanel("price_bar_label"),
+                FieldPanel("price_per_seat"),
+                FieldPanel("limited_seats_line"),
+                FieldPanel("sold_out_line"),
+                FieldPanel("cta_label"),
+                FieldPanel("enquiry_whatsapp"),
+                FieldPanel("intro"),
+            ],
+            heading="Homepage flyer (what guests see on /)",
+        ),
+        MultiFieldPanel(
+            [
+                FieldPanel("hero_image"),
+                FieldPanel("chef_name"),
+                FieldPanel("chef_byline"),
+                FieldPanel("chef_role"),
+            ],
+            heading="Chef photo",
         ),
         MultiFieldPanel(
             [
@@ -258,6 +526,7 @@ class HomePage(Page):
         workshop = events[0] if events else None
         context["events"] = events
         context["workshop"] = workshop
+        context["flyer"] = FlyerFacade(self, workshop)
         context["show_event_cards"] = len(events) > 1
         context["home_hero"] = self.hero_image or (workshop.hero_image if workshop else None)
         context["canonical_url"] = seo.page_canonical(self)
@@ -305,8 +574,26 @@ class HomePage(Page):
             context["og_image_alt"] = context.get("seo_og_default_alt", "Cafe Orelo workshop bookings")
         return context
 
+    def sync_featured_event(self) -> bool:
+        """Copy flyer fields onto the only live Event so the booking page matches /."""
+        events = list(
+            WorkshopPage.objects.live().public().descendant_of(self).order_by("workshop_date")
+        )
+        if len(events) != 1:
+            return False
+        event = events[0]
+        changed = False
+        for field in HOME_EVENT_SYNC_FIELDS:
+            value = getattr(self, field)
+            if getattr(event, field) != value:
+                setattr(event, field, value)
+                changed = True
+        if changed:
+            event.save_revision().publish()
+        return changed
 
-class WorkshopPage(Page):
+
+class WorkshopPage(FlyerDisplayMixin, Page):
     """One reusable event: its own form, price, Razorpay links, and post-pay invites."""
 
     workshop_date = models.DateField(verbose_name="Event date")
@@ -517,7 +804,7 @@ class WorkshopPage(Page):
                 FieldPanel("cta_label"),
                 FieldPanel("enquiry_whatsapp"),
             ],
-            heading="Flyer copy (homepage + this Event)",
+            heading="Flyer copy (this Event page)",
         ),
         InlinePanel(
             "packages",
@@ -661,65 +948,6 @@ class WorkshopPage(Page):
 
     def is_sold_out(self) -> bool:
         return self.seats_remaining() <= 0
-
-    def take_home_items(self) -> list[str]:
-        return [line.strip() for line in (self.take_home_list or "").splitlines() if line.strip()]
-
-    def take_home_display(self) -> list[dict[str, str]]:
-        items = []
-        for index, text in enumerate(self.take_home_items()):
-            items.append(
-                {
-                    "text": text,
-                    "icon": TAKE_HOME_ICONS[index % len(TAKE_HOME_ICONS)],
-                    "orb": TAKE_HOME_ORBS[index % len(TAKE_HOME_ORBS)],
-                }
-            )
-        return items
-
-    def enquiry_whatsapp_digits(self) -> str:
-        digits = re.sub(r"\D", "", self.enquiry_whatsapp or "")
-        if len(digits) >= 10:
-            return digits[-10:]
-        return ""
-
-    def enquiry_whatsapp_url(self) -> str:
-        digits = self.enquiry_whatsapp_digits()
-        return f"https://wa.me/91{digits}" if digits else ""
-
-    def enquiry_whatsapp_display(self) -> str:
-        return self.enquiry_whatsapp_digits()
-
-    def format_date(self) -> str:
-        return self.workshop_date.strftime("%-d %B %Y")
-
-    def format_time_range(self) -> str:
-        start = self.start_time.strftime("%-I:%M %p")
-        end = self.end_time.strftime("%-I:%M %p")
-        return f"{start} – {end}"
-
-    def format_flyer_date(self) -> str:
-        """All-caps flyer line, e.g. SUNDAY 23RD AUGUST 2026."""
-        day = self.workshop_date.day
-        if 11 <= day <= 13:
-            suffix = "th"
-        else:
-            suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
-        weekday = self.workshop_date.strftime("%A").upper()
-        month = self.workshop_date.strftime("%B").upper()
-        return f"{weekday} {day}{suffix.upper()} {month} {self.workshop_date.year}"
-
-    def format_flyer_time(self) -> str:
-        """Zero-padded flyer line, e.g. 03:00 PM TO 05:00 PM."""
-        start = self.start_time.strftime("%I:%M %p")
-        end = self.end_time.strftime("%I:%M %p")
-        return f"{start} TO {end}"
-
-    def chef_display_name(self) -> str:
-        name = (self.chef_name or "").strip()
-        if name.lower().startswith("chef "):
-            return name[5:].strip()
-        return name or "Aanchal Wadhwa"
 
     def uses_static_payment_link(self) -> bool:
         """True when guests pay the event-level per-seat URL (no packages)."""
