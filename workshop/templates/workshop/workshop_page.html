@@ -1,5 +1,5 @@
 {% extends "workshop/base.html" %}
-{% load wagtailcore_tags %}
+{% load l10n wagtailcore_tags %}
 
 {% block content %}
 <section class="flyer-split flyer-split--register">
@@ -105,8 +105,22 @@
 <script>
   const form = document.getElementById("registration-form");
   const button = document.getElementById("submit-btn");
+  if (window.fbq) {
+    fbq("track", "ViewContent", {
+      content_name: "{{ page.workshop_subtitle|escapejs }}",
+      content_type: "product",
+      value: {{ page.price_per_seat|unlocalize }},
+      currency: "INR"
+    });
+  }
   if (form && button) {
     form.addEventListener("submit", () => {
+      if (window.fbq) {
+        fbq("track", "InitiateCheckout", {
+          content_name: "{{ page.workshop_subtitle|escapejs }}",
+          currency: "INR"
+        });
+      }
       button.disabled = true;
       button.setAttribute("aria-busy", "true");
       button.textContent = "Taking you to payment…";

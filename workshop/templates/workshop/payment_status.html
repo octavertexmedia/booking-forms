@@ -1,4 +1,5 @@
 {% extends "workshop/base.html" %}
+{% load l10n %}
 
 {% block title %}{% if is_paid %}Booking confirmed{% else %}Pay to confirm{% endif %} · Cafe Orelo{% endblock %}
 {% block meta_description %}Cafe Orelo workshop booking status. Seats are confirmed only after payment.{% endblock %}
@@ -111,6 +112,38 @@
 
 {% block scripts %}
 <script>
+  {% if meta_pixel_id and registration %}
+  (function () {
+    const ref = "{{ registration.reference_id|escapejs }}";
+    const eventId = "{{ meta_purchase_event_id|escapejs }}";
+    if (!window.fbq || !ref) return;
+    {% if is_paid %}
+    const paidKey = "meta_purchase_" + ref;
+    if (!sessionStorage.getItem(paidKey)) {
+      fbq("track", "Purchase", {
+        value: {{ registration.amount|unlocalize }},
+        currency: "INR",
+        content_name: "{{ workshop.workshop_subtitle|default:'Cafe Orelo workshop'|escapejs }}",
+        content_ids: [ref],
+        num_items: {{ registration.seats }},
+        order_id: ref
+      }, {eventID: eventId});
+      sessionStorage.setItem(paidKey, "1");
+    }
+    {% else %}
+    const startKey = "meta_checkout_" + ref;
+    if (!sessionStorage.getItem(startKey)) {
+      fbq("track", "InitiateCheckout", {
+        value: {{ registration.amount|unlocalize }},
+        currency: "INR",
+        content_name: "{{ workshop.workshop_subtitle|default:'Cafe Orelo workshop'|escapejs }}",
+        num_items: {{ registration.seats }}
+      });
+      sessionStorage.setItem(startKey, "1");
+    }
+    {% endif %}
+  })();
+  {% endif %}
   const card = document.querySelector("[data-poll-url]");
   if (card && card.dataset.shouldPoll === "1") {
     const url = card.dataset.pollUrl;

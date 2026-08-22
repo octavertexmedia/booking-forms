@@ -291,5 +291,12 @@ def confirm_paid(
         registration.group_invite_sent,
     )
     deliver_invites(registration)
+    if not already_paid:
+        try:
+            from .meta_ads import send_capi_purchase
+
+            send_capi_purchase(registration)
+        except Exception:
+            logger.exception("Meta CAPI Purchase failed for %s", registration.reference_id)
     registration.refresh_from_db()
     return registration

@@ -1,4 +1,5 @@
 from workshop import seo
+from workshop.meta_ads import domain_verification, pixel_id
 
 
 def public_seo(request):
@@ -14,6 +15,8 @@ def public_seo(request):
             "Sunday 23 August 2026, 3–5 PM, ₹1499"
         ),
         "website_json_ld": seo.json_ld_script(seo.graph_payload(*seo.website_json_ld())),
+        "meta_pixel_id": pixel_id(),
+        "meta_domain_verification": domain_verification(),
     }
 
 

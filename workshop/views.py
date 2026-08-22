@@ -45,6 +45,8 @@ def health(_request: HttpRequest) -> JsonResponse:
             "service": "cafe-orelo-workshop",
             "razorpay_keys_configured": has_api_keys(),
             "razorpay_webhook_secret_configured": bool(settings.RAZORPAY_WEBHOOK_SECRET),
+            "meta_pixel_configured": bool(getattr(settings, "META_PIXEL_ID", "")),
+            "meta_capi_configured": bool(getattr(settings, "META_CAPI_ACCESS_TOKEN", "")),
         }
     )
 
@@ -132,6 +134,9 @@ def _payment_status_context(
         "is_paid": is_paid,
         "cancelled": cancelled and not is_paid,
         "should_poll": bool(registration) and not is_paid,
+        "meta_purchase_event_id": (
+            f"purchase-{registration.reference_id}" if registration else ""
+        ),
     }
 
 
@@ -533,6 +538,8 @@ def _webhook_health_payload() -> dict:
         "razorpay_keys_configured": has_api_keys(),
         "whatsapp_api_url": settings.WHATSAPP_API_URL or "",
         "whatsapp_token_configured": bool(settings.WHATSAPP_API_TOKEN),
+        "meta_pixel_configured": bool(getattr(settings, "META_PIXEL_ID", "")),
+        "meta_capi_configured": bool(getattr(settings, "META_CAPI_ACCESS_TOKEN", "")),
     }
 
 
